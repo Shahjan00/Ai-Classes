@@ -78,3 +78,45 @@ export function matchBoardTopic(question) {
   }
   return null;
 }
+
+// Build a FRESH board from an answer, for ANY question. Used when the
+// backend cannot be reached and no canned topic matches, so the board
+// still generates instead of showing an old example. Mirrors the
+// backend's generic_board_spec: each sentence becomes one flow step
+// (its first few words are the box label) and one chalk line.
+export function genericBoardSpec(question, answer) {
+  const topic = (question || 'this topic').trim().replace(/\?+$/, '') || 'this topic';
+  const topicLabel = topic.slice(0, 40);
+  const topicLabelCap = topicLabel[0].toUpperCase() + topicLabel.slice(1);
+  const fillerLabels = [
+    ['here is the simple idea behind', topicLabelCap],
+    ['break it into small parts', 'Break it into parts'],
+    ['then connect it to', 'Connect to daily life'],
+  ];
+  const sentences = (answer || '')
+    .split(/(?<=[.?!])\s+/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .slice(0, 4);
+  if (!sentences.length) return null;
+  let labels = sentences.map((s) => {
+    const low = s.toLowerCase();
+    for (const [start, plain] of fillerLabels) {
+      if (low.startsWith(start)) return plain;
+    }
+    return s.split(/\s+/).slice(0, 4).join(' ').replace(/[.,?!]+$/, '') || s.slice(0, 20);
+  });
+  if (labels.length < 2) {
+    const words = sentences[0].split(/\s+/);
+    const half = Math.max(1, Math.floor(words.length / 2));
+    labels = [words.slice(0, half).join(' '), words.slice(half).join(' ') || '...'];
+  }
+  let title = (question || 'On the board').trim().replace(/\?+$/, '').slice(0, 50) || 'On the board';
+  title = title[0].toUpperCase() + title.slice(1);
+  return {
+    id: 'live',
+    title,
+    diagram: { type: 'flow', labels },
+    lines: sentences.map((s) => s.slice(0, 80)),
+  };
+}

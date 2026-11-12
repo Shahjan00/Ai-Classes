@@ -169,12 +169,59 @@ DEMO_BOARD_SPECS = [
 ]
 
 
+def generic_board_spec(question: str, answer: str) -> dict:
+    """Build a FRESH board from the answer itself, for any question.
+    Each sentence of the answer becomes one step in a flow diagram
+    (its first few words are the box label) and one chalk line below.
+    This is what makes the board generate instead of serving examples:
+    it only runs when no canned topic matches the question.
+    The generic demo answer is filler ("Here is the simple idea..."),
+    so its sentences get plain labels instead of the filler words."""
+    topic = (question or 'this topic').strip().rstrip('?').strip()
+    topic_label = (topic[:40] or 'This topic')
+    topic_label = topic_label[0].upper() + topic_label[1:]
+    filler_labels = {
+        'here is the simple idea behind': topic_label,
+        'break it into small parts': 'Break it into parts',
+        'then connect it to': 'Connect to daily life',
+    }
+    sentences = [s.strip() for s in re.split(r'(?<=[.?!])\s+', answer.strip()) if s.strip()]
+    sentences = sentences[:4]
+    labels = []
+    for s in sentences:
+        low = s.lower()
+        label = None
+        for start, plain in filler_labels.items():
+            if low.startswith(start):
+                label = plain
+                break
+        if label is None:
+            words = s.split()
+            label = ' '.join(words[:4]).rstrip('.,?!') or s[:20]
+        labels.append(label)
+    # A flow needs at least two boxes; split one long sentence in half.
+    if len(labels) < 2 and sentences:
+        words = sentences[0].split()
+        half = max(1, len(words) // 2)
+        labels = [' '.join(words[:half]), ' '.join(words[half:]) or '...']
+    title = (question or 'On the board').strip().rstrip('?').strip()
+    title = (title[:50] or 'On the board')
+    title = title[0].upper() + title[1:]
+    return {
+        'id': 'live',
+        'title': title,
+        'diagram': {'type': 'flow', 'labels': labels},
+        'lines': [s[:80] for s in sentences],
+    }
+
+
 def demo_board_spec(question: str) -> dict | None:
     q = question.lower()
     for entry in DEMO_BOARD_SPECS:
         if any(k in q for k in entry["match"]):
             return entry["spec"]
-    return None
+    # No canned topic matches: generate a fresh board from the answer.
+    return generic_board_spec(question, demo_answer(question))
 
 
 async def groq_board_spec(question: str) -> dict | None:
