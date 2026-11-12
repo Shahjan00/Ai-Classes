@@ -78,17 +78,45 @@ fs.mkdirSync(SHOTS, { recursive: true });
   await page.screenshot({ path: `${SHOTS}/teacher-board-bars.png` });
 
   // Mouth frames: force the wide-open mouth and the blink frame via the
-  // ?mouth= preview hook and screenshot each, so a head jump between
-  // frames would show up here. (Hash-only navigation does not remount,
-  // so reload to run the mount hook fresh.)
+  // ?mouth= preview hook and screenshot each, plus a tight face close-up
+  // (top 42% of the figure) so any line across the face would show.
+  // (Hash-only navigation does not remount, so reload to run the mount
+  // hook fresh.) A frame swap must not move the body: the closed,
+  // open and blink shots share the same figure position.
+  const faceShot = async (path) => {
+    const box = await page.locator('.teacher-center-figure').boundingBox();
+    await page.screenshot({ path, clip: { x: box.x, y: box.y, width: box.width, height: box.height * 0.42 } });
+  };
   await page.goto('http://127.0.0.1:4173/#/teacher-ai?mouth=2', { waitUntil: 'networkidle' });
   await page.reload({ waitUntil: 'networkidle' });
   await page.waitForTimeout(1200);
   await page.screenshot({ path: `${SHOTS}/teacher-mouth-open.png` });
+  await faceShot(`${SHOTS}/teacher-face-open.png`);
   await page.goto('http://127.0.0.1:4173/#/teacher-ai?mouth=3', { waitUntil: 'networkidle' });
   await page.reload({ waitUntil: 'networkidle' });
   await page.waitForTimeout(1200);
   await page.screenshot({ path: `${SHOTS}/teacher-blink.png` });
+  await faceShot(`${SHOTS}/teacher-face-blink.png`);
+  await page.goto('http://127.0.0.1:4173/#/teacher-ai', { waitUntil: 'networkidle' });
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.waitForTimeout(1200);
+  await faceShot(`${SHOTS}/teacher-face-closed.png`);
+
+  // Timer-driven mouth: ?mouth=auto starts the speaking state with the
+  // mouth interval running (no real voice needed). Sample data-mouth
+  // over ~1.2s; the cycle 0,1,2,1 must show at least 3 distinct values,
+  // proving the timer flips frames live while she speaks.
+  await page.goto('http://127.0.0.1:4173/#/teacher-ai?mouth=auto', { waitUntil: 'networkidle' });
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.waitForTimeout(400);
+  const mouthSeq = [];
+  for (let i = 0; i < 7; i++) {
+    mouthSeq.push(await page.evaluate(() => document.querySelector('.teacher-figure')?.dataset.mouth));
+    await page.waitForTimeout(180);
+  }
+  console.log('mouth timer sequence:', mouthSeq.join(','));
+  if (new Set(mouthSeq).size < 3) throw new Error('mouth timer did not cycle frames: ' + mouthSeq.join(','));
+  await page.screenshot({ path: `${SHOTS}/teacher-mouth-live.png` });
 
   // Save this chat from the floating window, then confirm it lands on
   // the student dashboard (via Demo login).
