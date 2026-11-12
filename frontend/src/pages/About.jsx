@@ -14,7 +14,7 @@ export default function About() {
     <section className="section" style={{ paddingTop: 48 }}>
       <div className="wrap">
         <p className="kicker"><span className="dot">●</span> About</p>
-        <h1 className="display display-md" style={{ margin: '10px 0 8px' }}>One crore students. One teacher each.</h1>
+        <h1 className="display display-md" style={{ margin: '10px 0 8px' }}>One teacher for every student.</h1>
         <p className="lede">
           Learnzo Bharat Education started with a simple problem: a classroom
           has forty students and one teacher, and every student has a different
@@ -32,8 +32,8 @@ export default function About() {
               they believed it.
             </p>
             <p>
-              The aim is 1 crore students. Not by selling software, but by
-              making the AI teacher so useful that students ask for it by name.
+              The aim is simple: make the AI teacher so useful that students
+              ask for it by name, in every classroom.
             </p>
             <h3 style={{ fontFamily: 'var(--font-display)', textTransform: 'uppercase', marginTop: 32 }}>Leadership</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
@@ -47,28 +47,19 @@ export default function About() {
           </div>
 
           <div className="card">
-            <h3>How it scales to 2 crore students</h3>
+            <h3>What every student gets</h3>
             <p style={{ marginTop: 8 }}>
-              Three choices do the heavy lifting. Everything else follows.
+              The same patient teacher, for every subject and every class.
             </p>
             <ol style={{ lineHeight: 1.9, paddingLeft: 20 }}>
-              <li><strong>Stateless API.</strong> No server remembers a student. Any copy can answer any question, so we add copies when load grows.</li>
-              <li><strong>CDN for everything static.</strong> The site, the avatar and the lessons are cached near the student, so the servers only do the thinking.</li>
-              <li><strong>Cache per chapter.</strong> Ten lakh students asking the same photosynthesis question get the same good answer, computed once.</li>
+              <li><strong>Ask anything.</strong> A question in class, homework, or general knowledge — answered in simple words.</li>
+              <li><strong>Hear it out loud.</strong> The teacher speaks the answer, in English or Hindi, at your pace.</li>
+              <li><strong>See it on the board.</strong> When a question needs a diagram or an equation, the teacher explains it on the green board, line by line.</li>
+              <li><strong>Check yourself.</strong> A quick quiz after every answer shows what you understood.</li>
             </ol>
-            <div className="diagram" style={{ marginTop: 20 }}>
-              <div className="node"><b>2 Cr students</b><span>Phones + classroom TVs</span></div>
-              <div className="arrow">→</div>
-              <div className="node"><b>CDN</b><span>Static, cached</span></div>
-              <div className="arrow">→</div>
-              <div className="node"><b>Stateless API</b><span>Scales sideways</span></div>
-              <div className="arrow">→</div>
-              <div className="node"><b>Groq</b><span>Fast answers</span></div>
-            </div>
             <p style={{ marginTop: 16, fontSize: 14, color: 'var(--ink-soft)' }}>
-              Voice runs in the browser, so it costs the servers nothing.
-              That is what makes the Hindi voice teacher affordable at
-              this scale.
+              No question is too small. Ask the same thing twice, and the
+              teacher explains it a different way.
             </p>
           </div>
         </div>

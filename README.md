@@ -12,9 +12,10 @@ and the headline features made real.
 - **AI Teacher** — ask anything, Class 1–12, in English or Hindi. Answers
   stream in from Groq (`openai/gpt-oss-20b`), rendered as clean Markdown
   (never raw `**bold**`).
-- **Talking avatar** — a real teacher's face that listens, thinks and speaks,
-  driven by browser speech-synthesis word boundaries, with a live caption
-  that highlights the word being spoken.
+- **Talking avatar** — a teacher drawn in the app who listens, thinks
+  and speaks, with a lip-synced mouth, blinking eyes and a nodding head.
+  When a question needs a diagram or an equation, she steps to the side
+  and explains it on a green board, line by line, with her pointer stick.
 - **Hindi voice** — ask in Hindi, get a Hindi answer spoken aloud (hi-IN
   voice). Voice input via the browser's Web Speech API. Free.
 - **Notes Maker** — chapter notes in minutes, by class, subject and language.
@@ -32,13 +33,6 @@ and the headline features made real.
 - Notes Maker no longer demands sign-in while chat stays open.
 - AI answers no longer leak raw Markdown.
 - Slow fade-ins that left text near-invisible are gone.
-
-## Scale note
-
-How it reaches 2 crore students: stateless API (any copy can answer any
-question), a CDN for everything static, per-chapter answer caching, and
-voice that runs in the browser so it costs the servers nothing.
-See the diagram on the About page.
 
 ## Run it
 
@@ -78,5 +72,5 @@ frontend/   React app (all 14 pages, avatar, speech helpers)
 backend/    FastAPI server — /health, /api/chat (SSE), /api/notes
 ```
 
-Built as a demo for Learnzo (Associate Engineer task, Nov 2026).
+Built as a demo for Learnzo.
 Demo data is labelled as such; this is not the official Learnzo site.

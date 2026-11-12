@@ -46,7 +46,7 @@ export default function Home() {
               <div className="stat-row">
                 <div className="stat"><b>1–12</b><span>Classes covered</span></div>
                 <div className="stat"><b>40+</b><span>Languages planned</span></div>
-                <div className="stat"><b>2 Cr</b><span>Students, ready to scale</span></div>
+                <div className="stat"><b>7</b><span>Ways to learn</span></div>
               </div>
             </div>
             <div>
@@ -106,31 +106,6 @@ export default function Home() {
           </div>
           <div style={{ marginTop: 28 }}>
             <Link to="/programme" className="btn btn-dark">See the full programme →</Link>
-          </div>
-        </div>
-      </section>
-
-      <section className="section">
-        <div className="wrap grid2">
-          <div>
-            <p className="kicker"><span className="dot">●</span> Built to scale</p>
-            <h2 className="display display-md" style={{ margin: '12px 0 20px' }}>Ready for 2 crore students</h2>
-            <p className="lede">
-              The teacher runs on a stateless API behind a CDN, so every extra
-              school just adds more of the same small boxes. No single server
-              holds a student's state, answers are cached per chapter, and the
-              heavy work, the AI, scales on Groq.
-            </p>
-            <p style={{ marginTop: 16 }}><Link to="/about" className="btn btn-ghost">How it scales →</Link></p>
-          </div>
-          <div className="diagram">
-            <div className="node"><b>Student</b><span>Phone / classroom TV</span></div>
-            <div className="arrow">→</div>
-            <div className="node"><b>CDN</b><span>Static site, cached close to you</span></div>
-            <div className="arrow">→</div>
-            <div className="node"><b>API</b><span>Stateless FastAPI, many copies</span></div>
-            <div className="arrow">→</div>
-            <div className="node"><b>Groq AI</b><span>Answers stream back</span></div>
           </div>
         </div>
       </section>
