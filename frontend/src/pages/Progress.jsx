@@ -18,6 +18,20 @@ const MASTERY = [
 ];
 
 export default function Progress() {
+  const user = store.user;
+  // Before login, progress is private: show the sign-in prompt.
+  if (!user) {
+    return (
+      <section className="section" style={{ paddingTop: 48 }}>
+        <div className="wrap" style={{ maxWidth: 640 }}>
+          <p className="kicker"><span className="dot">●</span> Progress Dashboard</p>
+          <h1 className="display display-md" style={{ margin: '10px 0 16px' }}>Log in to see your progress</h1>
+          <p className="lede">Your lessons, quizzes and saved chats live here once you sign in. It takes ten seconds, no email verification in this demo.</p>
+          <Link to="/login" className="btn btn-yellow" style={{ marginTop: 20 }}>Sign in →</Link>
+        </div>
+      </section>
+    );
+  }
   const done = store.doneLessons;
   const scores = store.quizScores;
   const quizDone = Object.keys(scores).length;

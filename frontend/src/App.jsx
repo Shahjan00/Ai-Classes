@@ -1,7 +1,7 @@
 // App shell: nav, routes, footer, toast.
 // Toasts auto-dismiss after 3 seconds (the original's toast stuck forever).
 import { createContext, useCallback, useContext, useState } from 'react';
-import { NavLink, Route, Routes, Link, useNavigate } from 'react-router-dom';
+import { NavLink, Route, Routes, Link, useNavigate, useLocation } from 'react-router-dom';
 import { store } from './lib/store';
 import Home from './pages/Home';
 import Teacher from './pages/Teacher';
@@ -35,9 +35,11 @@ const LINKS = [
 ];
 
 function Nav() {
-  const [user, setUser] = useState(store.user);
+  // Read the user straight from the store on every render, so the nav
+  // updates right after sign in or log out (it remounts on navigation).
+  const user = store.user;
   const nav = useNavigate();
-  const logout = () => { store.user = null; setUser(null); nav('/'); };
+  const logout = () => { store.user = null; nav('/'); };
   return (
     <header className="nav">
       <div className="wrap nav-inner">
@@ -83,6 +85,7 @@ function Footer() {
 
 export default function App() {
   const [toasts, setToasts] = useState([]);
+  const location = useLocation();
   const toast = useCallback((msg) => {
     const id = Date.now() + Math.random();
     setToasts((t) => [...t, { id, msg }]);
@@ -91,7 +94,7 @@ export default function App() {
 
   return (
     <ToastCtx.Provider value={toast}>
-      <Nav />
+      <Nav key={location.pathname} />
       <main>
         <Routes>
           <Route path="/" element={<Home />} />

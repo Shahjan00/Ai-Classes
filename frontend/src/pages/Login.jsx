@@ -20,6 +20,12 @@ export default function Login() {
     nav('/student');
   };
 
+  const demoLogin = () => {
+    store.user = { name: 'Demo Student', cls: 'Class 8' };
+    toast('Welcome, Demo Student. This is a demo account.');
+    nav('/student');
+  };
+
   return (
     <section className="section" style={{ paddingTop: 48 }}>
       <div className="wrap" style={{ maxWidth: 520 }}>
@@ -35,6 +41,7 @@ export default function Login() {
             </select>
           </div>
           <button className="btn btn-yellow" type="submit">Sign in →</button>
+          <button className="btn btn-ghost btn-sm" type="button" onClick={demoLogin} style={{ alignSelf: 'center' }}>Demo login</button>
         </form>
       </div>
     </section>
