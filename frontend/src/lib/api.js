@@ -49,6 +49,25 @@ export function streamChat({ messages, subject, cls, lang }, onToken, onDone, on
   return () => ctrl.abort();
 }
 
+// Ask the backend for a realtime board spec for any question.
+// Returns { spec } when a visual helps, { spec: null } when it does not,
+// and { error: true } when the backend cannot be reached (the caller then
+// falls back to the fixed topics).
+export async function fetchBoardSpec(question, subject, cls, lang) {
+  try {
+    const r = await fetch(BASE + '/api/board', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question, subject, cls, lang }),
+    });
+    if (!r.ok) return { error: true };
+    const d = await r.json();
+    return { spec: d.board || null };
+  } catch {
+    return { error: true };
+  }
+}
+
 export async function getNotes({ subject, chapter, cls, lang }) {
   const r = await fetch(BASE + '/api/notes', {
     method: 'POST',

@@ -1,12 +1,13 @@
-// Board topics — the questions the teacher explains on the green board
-// instead of just talking. Each topic has chalk lines (explained one by
-// one, top to bottom) and a small diagram drawn on the board.
-export const BOARD_TOPICS = [
+// Board specs — fallback for when the backend cannot be reached.
+// The backend (/api/board) is the real source: in live mode Groq draws a
+// board for ANY question, in demo mode it serves its own table. These five
+// original topics stay here only so the board still works offline.
+export const FALLBACK_SPECS = [
   {
     id: 'photosynthesis',
     title: 'Photosynthesis',
     match: ['photosynthesis', 'photo synthesis', 'plant makes food', 'chlorophyll'],
-    diagram: 'photosynthesis',
+    diagram: { type: 'flow', labels: ['Sunlight in', 'Leaf catches light', 'Glucose made', 'Oxygen out'] },
     equation: '6CO\u2082 + 6H\u2082O + sunlight \u2192 C\u2086H\u2081\u2082O\u2086 + 6O\u2082',
     lines: [
       'Sunlight + water + carbon dioxide go in',
@@ -19,7 +20,7 @@ export const BOARD_TOPICS = [
     id: 'newton',
     title: "Newton's First Law",
     match: ['newton', 'first law', 'inertia', 'laws of motion'],
-    diagram: 'newton',
+    diagram: { type: 'flow', labels: ['Still ball', 'A push', 'Keeps rolling', 'A force stops it'] },
     equation: 'No force = no change in motion',
     lines: [
       'A still thing stays still',
@@ -32,7 +33,7 @@ export const BOARD_TOPICS = [
     id: 'fractions',
     title: 'Fractions',
     match: ['fraction', 'fractions', 'half', 'quarter'],
-    diagram: 'fractions',
+    diagram: { type: 'fraction-bars', bars: [{ label: '3/4 taken', taken: 3, total: 4 }, { label: '1/4 left', taken: 1, total: 4 }] },
     equation: '1/2 + 1/4 = 2/4 + 1/4 = 3/4',
     lines: [
       'Bottom number = total equal parts',
@@ -45,7 +46,7 @@ export const BOARD_TOPICS = [
     id: 'thunder',
     title: 'Lightning and thunder',
     match: ['lightning', 'thunder', 'why do we see lightning'],
-    diagram: 'thunder',
+    diagram: { type: 'flow', labels: ['Flash made', 'Light races ahead', 'Sound follows', 'You hear thunder'] },
     equation: 'distance \u2248 seconds \u00d7 343 m',
     lines: [
       'Light: 3,00,000 km every second',
@@ -58,7 +59,7 @@ export const BOARD_TOPICS = [
     id: 'algebra',
     title: 'Solving for x',
     match: ['algebra', 'solve for x', 'equation'],
-    diagram: 'algebra',
+    diagram: { type: 'scale', labels: ['2x + 3', '11'] },
     equation: '2x + 3 = 11  \u2192  x = 4',
     lines: [
       'x is a number we do not know yet',
@@ -69,10 +70,10 @@ export const BOARD_TOPICS = [
   },
 ];
 
-// Find the board topic for a question, or null for a text-only answer.
+// Find a fallback board spec for a question, or null for a text-only answer.
 export function matchBoardTopic(question) {
   const q = (question || '').toLowerCase();
-  for (const t of BOARD_TOPICS) {
+  for (const t of FALLBACK_SPECS) {
     if (t.match.some((k) => q.includes(k))) return t;
   }
   return null;
