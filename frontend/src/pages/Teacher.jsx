@@ -48,6 +48,17 @@ export default function Teacher() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Preview/test hook: ?mouth=0..3 forces a mouth frame (2 = wide open,
+  // 3 = blink) with the speaking pose, so the face can be screenshotted.
+  useEffect(() => {
+    const m = searchParams.get('mouth');
+    if (m !== null && /^[0-3]$/.test(m)) {
+      setMouthFrame(parseInt(m, 10));
+      setAvatarState('speaking');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [msgs, setMsgs] = useState(() => (store.chat.length ? store.chat : [WELCOME]));
   const [input, setInput] = useState('');
   const [lang, setLang] = useState('en');
@@ -62,11 +73,10 @@ export default function Teacher() {
   const [layout, setLayout] = useState('center');
   const [boardTopic, setBoardTopic] = useState(null);
   const [boardLine, setBoardLine] = useState(0);
-  // mouthFrame is the hook for real mouth variants: it flips 0/1 on every
-  // spoken word boundary. Only frame 0 exists today (the base image), so
-  // nothing visible changes — when the user supplies open/closed-mouth
-  // head images, they go in TeacherFigure's HEAD_FRAMES and the head
-  // starts swapping frames while speaking.
+  // mouthFrame is the hook for real mouth variants: it cycles closed /
+  // slightly open / wide open / slightly open on every spoken word
+  // boundary, so the mouth flaps while she talks. Frame 3 is the blink
+  // (TeacherFigure blinks on its own every few seconds).
   const [mouthFrame, setMouthFrame] = useState(0);
   const latestQRef = useRef('');
   const abortRef = useRef(null);
@@ -174,7 +184,7 @@ export default function Teacher() {
     speak(
       plain,
       lang,
-      (i) => { advanceBoardLine(i, plain); setMouthFrame(i % 2); },
+      (i) => { advanceBoardLine(i, plain); setMouthFrame([0, 1, 2, 1][i % 4]); },
       finish,
     );
     // Safety net: headless browsers or missing voices may never fire onend.

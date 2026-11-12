@@ -282,14 +282,16 @@ label { font-weight: 600; font-size: 13px; }
 .teacher-area.board-mode { justify-content: flex-start; }
 .teacher-center { display: flex; flex-direction: column; align-items: center; }
 .teacher-side { width: 220px; flex: none; display: flex; flex-direction: column; align-items: center; }
-/* The teacher, split head/body so she moves: one image rendered twice.
-   The head layer shows the top half; the body layer shows from 40% down
-   and is painted ON TOP of the head, so the head's bottom edge is always
-   hidden behind the body and the seam never shows — no feather, no mask
-   (a feathered edge ghosts the moment the head turns). The head pivots at
-   the neck (transform-origin 50% 40%): it nods while she speaks and looks
-   around when idle. The whole-figure bob lives on the outer wrap so both
-   layers always move together. */
+/* The teacher, split head/body so she moves: the head is a tight crop
+   (hair to chin/neck, rows 0..275) rendered at the top of the figure box,
+   the body is the base image starting just below the chin (19.4%) and is
+   painted ON TOP of the head, so the head's bottom edge is always hidden
+   behind the body and the seam never shows — no feather, no mask (a
+   feathered edge ghosts the moment the head turns). Only the head moves,
+   never the shoulders. The head pivots at the neck (transform-origin
+   50% 22%): it nods while she speaks and looks around when idle. The
+   whole-figure bob lives on the outer wrap so both layers always move
+   together. */
 .teacher-bob-wrap { display: inline-block; animation: teacher-bob 5s ease-in-out infinite; }
 .teacher-figure { position: relative; aspect-ratio: 356 / 1084; }
 .teacher-figure .teacher-layer {
@@ -297,13 +299,13 @@ label { font-weight: 600; font-size: 13px; }
   object-fit: contain; display: block;
 }
 .teacher-figure .teacher-head {
-  clip-path: inset(0 0 50% 0);
+  object-position: top;
   z-index: 1;
-  transform-origin: 50% 40%;
+  transform-origin: 50% 22%;
   animation: head-look 8s ease-in-out infinite;
 }
 .teacher-figure .teacher-body {
-  clip-path: inset(40% 0 0 0);
+  clip-path: inset(19.4% 0 0 0);
   z-index: 2;
 }
 .teacher-figure.speaking .teacher-head { animation: head-nod 0.8s ease-in-out infinite; }
