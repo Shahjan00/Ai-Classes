@@ -1,127 +1,143 @@
-// Home — the landing page. Design follows the reference Shahjan picked:
-// giant display type, one yellow accent, one strong hero visual (the
-// talking avatar), lots of white space.
-import { Link } from 'react-router-dom';
-import Avatar from '../components/Avatar';
+import { useEffect, useRef } from 'react'
+import { Link } from 'react-router-dom'
+import CursorMesh from '../components/CursorMesh'
 
-const CAPABILITIES = [
-  { n: '01', t: 'AI Teacher', d: 'Ask anything, Class 1 to 12. Answers stream in, in simple words, in English or Hindi.' },
-  { n: '02', t: 'Talking Avatar', d: 'A real teacher face that listens, thinks and speaks with you. Lip-synced, with expressions.' },
-  { n: '03', t: 'Hindi Voice', d: 'Ask in Hindi, get a Hindi answer spoken aloud. 40 languages on the roadmap.' },
-  { n: '04', t: 'Notes Maker', d: 'Chapter notes in minutes, in your class, subject and language.' },
-  { n: '05', t: 'Coding Lab', d: 'Real Python in the browser. Write code, run it, pass the tests.' },
-  { n: '06', t: 'Quiz Centre', d: 'AI quizzes that check what you actually understood, not what you memorised.' },
-  { n: '07', t: 'Exam Hall', d: 'Timed practice exams with instant results and revision pointers.' },
-];
+/* Content is refined from the original site (jarvis-rust-phi.vercel.app).
+   The dark "Capabilities we are designing" orbit section is NOT on this
+   page: the user asked for it to be removed. */
 
-const TIERS = [
-  { t: 'Foundation', c: 'Classes 1–5', d: 'Reading, numbers and curiosity, with a patient AI teacher.' },
-  { t: 'Explorer', c: 'Classes 6–8', d: 'Science and maths made visual, with quizzes after every chapter.' },
-  { t: 'Achiever', c: 'Classes 9–10', d: 'Board exam prep: notes, tests and revision plans that adapt.' },
-  { t: 'Future Tech', c: 'Classes 11–12', d: 'AI, quantum, robotics and more. 11 modules for what comes next.' },
-];
+const SAMPLES = [
+  { tag: 'AI Basics', q: 'What is AI, in simple words?' },
+  { tag: 'Machine Learning', q: 'How does machine learning actually learn?' },
+  { tag: 'AI Agents', q: 'What is an AI agent?' },
+  { tag: 'Super AI', q: 'What is super AI?' },
+  { tag: 'Build AI Startups', q: 'How do I start building with AI?' },
+  { tag: 'Quiz', q: 'Quiz me on photosynthesis' },
+]
 
 export default function Home() {
+  const demoRef = useRef(null)
+
+  useEffect(() => {
+    document.title = 'JARVISH AI — Your AI Teacher'
+  }, [])
+
   return (
-    <>
+    <div className="page home-page">
       <section className="hero">
-        <div className="wrap">
-          <p className="kicker"><span className="dot">●</span> Learnzo Bharat Education · Demo build</p>
-          <h1 className="display display-xl">
-            Ask<br />anything<span style={{ color: 'var(--yellow)' }}>.</span><br />Learn<br />everything.
-          </h1>
-          <div className="hero-grid" style={{ marginTop: 40 }}>
-            <div>
-              <p className="lede">
-                JARVISH is your AI teacher, in every classroom. A real talking
-                avatar that explains, listens and answers, in English or Hindi,
-                for Classes 1 to 12.
-              </p>
-              <div style={{ display: 'flex', gap: 14, marginTop: 32, flexWrap: 'wrap', alignItems: 'center' }}>
-                <Link to="/teacher-ai" className="btn btn-dark">Talk to AI Teacher →</Link>
-                <Link to="/teacher-ai" style={{ display: 'inline-flex', alignItems: 'center', gap: 12, fontWeight: 700 }}>
-                  <span className="play-btn">▶</span> Watch the avatar talk
-                </Link>
-              </div>
-              <div className="stat-row">
-                <div className="stat"><b>1–12</b><span>Classes covered</span></div>
-                <div className="stat"><b>40+</b><span>Languages planned</span></div>
-                <div className="stat"><b>7</b><span>Ways to learn</span></div>
-              </div>
+        <CursorMesh />
+        <div className="wrap hero-grid">
+          <div className="hero-copy fade-up">
+            <p className="kicker"><span className="dot" /> LEARNZO BHARAT EDUCATION · DEMO BUILD</p>
+            <h1>Ask<br />anything<span className="dot">.</span> Learn<br />everything.</h1>
+            <p className="lede">
+              Ask questions, get step-by-step explanations, practise with quizzes
+              and track learning — an AI-powered teaching and learning platform
+              designed for schools.
+            </p>
+            <div className="hero-cta">
+              <Link className="btn btn-yellow" to="/teacher-ai">Talk to your AI teacher</Link>
+              <a className="btn btn-ghost" href="#demo">See it in action</a>
             </div>
-            <div>
-              <Avatar state="idle" />
-              <p style={{ marginTop: 14, fontSize: 14, color: 'var(--ink-soft)' }}>
-                <strong style={{ color: 'var(--ink)' }}>Meet JARVISH.</strong> Not a robot
-                illustration, a teacher who talks back. Try her on the AI Teacher page.
-              </p>
+            <div className="hero-stats">
+              <div><strong>1–12</strong><span>Classes covered</span></div>
+              <div><strong>2</strong><span>Languages · English + Hindi</span></div>
+              <div><strong>4</strong><span>Tiers · Standards 1–12</span></div>
             </div>
+          </div>
+          <div className="hero-teacher fade-up">
+            <img src="/teacher.png" alt="Your AI teacher" className="hero-teacher-img" />
+            <p className="hero-teacher-caption">Your AI teacher, ready when you are.</p>
           </div>
         </div>
       </section>
 
-      <section className="section grey">
+      <section className="section" id="demo" ref={demoRef}>
         <div className="wrap">
-          <p className="kicker"><span className="dot">●</span> What it does</p>
-          <h2 className="display display-md" style={{ margin: '12px 0 36px' }}>Seven ways to learn</h2>
-          <div className="cards">
-            {CAPABILITIES.map((c) => (
-              <div className="card" key={c.n}>
-                <span className="num">{c.n}</span>
-                <h3>{c.t}</h3>
-                <p>{c.d}</p>
-              </div>
+          <p className="kicker">SEE JARVISH IN ACTION</p>
+          <h2>Try a sample conversation.</h2>
+          <p className="section-lede">
+            Pre-written sample conversations that replay automatically.
+            Pick one to see how the real-time AI response feels.
+          </p>
+          <div className="sample-grid">
+            {SAMPLES.map((s) => (
+              <Link key={s.tag} className="sample-card" to={`/teacher-ai?q=${encodeURIComponent(s.q)}`}>
+                <span className="sample-tag">{s.tag}</span>
+                <span className="sample-q">{s.q}</span>
+                <span className="sample-go">Ask your teacher →</span>
+              </Link>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="section section-grey">
+        <div className="wrap">
+          <p className="kicker">TRY YOUR OWN QUESTION</p>
+          <h2>Ask anything to see how the real-time AI response feels.</h2>
+          <p className="section-lede">
+            <strong>LIVE AI RESPONSE</strong> · Real-time · Response generated via backend API.
+          </p>
+          <div className="try-box">
+            <input
+              className="try-input"
+              placeholder="Ask me anything…"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                  window.location.href = `/teacher-ai?q=${encodeURIComponent(e.currentTarget.value.trim())}`
+                }
+              }}
+            />
+            <Link className="btn btn-yellow" to="/teacher-ai">Ask your teacher</Link>
           </div>
         </div>
       </section>
 
       <section className="section">
         <div className="wrap">
-          <p className="kicker"><span className="dot">●</span> How it works</p>
-          <h2 className="display display-md" style={{ margin: '12px 0 36px' }}>Three steps. That is it.</h2>
-          <div className="cards">
-            <div className="card"><span className="num">Step 1</span><h3>Ask</h3><p>Type, or just speak. In English or Hindi, any subject, any class.</p></div>
-            <div className="card"><span className="num">Step 2</span><h3>Listen</h3><p>The avatar answers out loud, word by word, with examples you can follow.</p></div>
-            <div className="card"><span className="num">Step 3</span><h3>Check</h3><p>A quick quiz checks you got it. Stuck? Ask again, differently.</p></div>
-          </div>
-          <div style={{ marginTop: 36 }}>
-            <Link to="/teacher-ai" className="btn btn-yellow">Try it now →</Link>
-          </div>
-        </div>
-      </section>
-
-      <section className="section grey">
-        <div className="wrap">
-          <p className="kicker"><span className="dot">●</span> Programme</p>
-          <h2 className="display display-md" style={{ margin: '12px 0 36px' }}>Four tiers, Class 1 to 12</h2>
-          <div className="cards">
-            {TIERS.map((t) => (
-              <div className="card" key={t.t}>
-                <span className="num">{t.c}</span>
-                <h3>{t.t}</h3>
-                <p>{t.d}</p>
-              </div>
+          <p className="kicker">PROPOSED PROGRAMME</p>
+          <h2>Four tiers across Standards 1–12.</h2>
+          <div className="tier-grid">
+            {[
+              { t: 'Tier 1', s: 'Standards 1–3', d: 'Curiosity first. Simple answers, spoken aloud, in easy words.' },
+              { t: 'Tier 2', s: 'Standards 4–6', d: 'Short explanations with examples, plus quick quizzes to check understanding.' },
+              { t: 'Tier 3', s: 'Standards 7–9', d: 'Step-by-step explanations, diagrams on the green board, and practice questions.' },
+              { t: 'Tier 4', s: 'Standards 10–12', d: 'Deeper answers, exam-style practice, and revision notes you can keep.' },
+            ].map((x) => (
+              <article key={x.t} className="tier-card">
+                <strong>{x.t}</strong>
+                <h3>{x.s}</h3>
+                <p>{x.d}</p>
+              </article>
             ))}
           </div>
-          <div style={{ marginTop: 28 }}>
-            <Link to="/programme" className="btn btn-dark">See the full programme →</Link>
-          </div>
         </div>
       </section>
 
-      <section className="section grey">
-        <div className="wrap" style={{ textAlign: 'center' }}>
-          <h2 className="display display-lg">AI complements teachers.<br />It never replaces them.</h2>
-          <p className="lede" style={{ margin: '20px auto 0' }}>
-            JARVISH handles the repeat questions, so teachers get their time
-            back for the teaching only a human can do.
+      <section className="section section-grey">
+        <div className="wrap">
+          <p className="kicker">A BLENDED APPROACH</p>
+          <h2>A more connected learning experience.</h2>
+          <p className="section-lede">
+            AI-assisted learning, teacher guidance and student participation,
+            brought together. JARVISH is intended to complement classroom
+            teaching, not remove the importance of human teachers.
           </p>
-          <div style={{ marginTop: 32 }}>
-            <Link to="/schools" className="btn btn-dark">Bring JARVISH to your school →</Link>
-          </div>
         </div>
       </section>
-    </>
-  );
+
+      <section className="section">
+        <div className="wrap">
+          <p className="kicker">FACTS, NOT STATISTICS</p>
+          <h2>Honest about what it is.</h2>
+          <p className="section-lede">
+            No user counts, accuracy, uptime, response-time or performance
+            figures appear anywhere on this site.
+          </p>
+          <Link className="btn btn-yellow" to="/teacher-ai">Meet your AI teacher</Link>
+        </div>
+      </section>
+    </div>
+  )
 }
