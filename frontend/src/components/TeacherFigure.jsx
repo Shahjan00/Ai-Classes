@@ -1,22 +1,21 @@
-// The teacher, split into head and body so she can actually MOVE.
-// The head is a tight crop (hair to chin/neck, rows 0..275 of the figure)
-// from one of five frames: closed mouth, slightly open, wide open, blink
-// (eyes closed) and happy. The body is always the base image, so the body
-// never jitters when the face changes. The body starts just below the chin
-// and overlaps the head at the neck, so the seam stays invisible and only
-// the head ever moves — never the shoulders. The mouth swaps frames while
-// she speaks (mouthFrame prop); she blinks every few seconds on her own.
+// The teacher, one full figure. No head/body split, no clip, no seam:
+// the whole figure swaps between five aligned frames (base mouth
+// closed, slightly open, wide open, blink, happy), so a face line is
+// impossible by construction. Life comes from the whole figure: gentle
+// bob, a slight tilt while she speaks, a lean toward the board, plus the
+// mouth frames cycling and a blink every few seconds. All frames are
+// face-centroid aligned, so swapping never moves the body.
 import { useEffect, useState } from 'react';
 import { TEACHER_IMG } from '../lib/teacherImage';
 import {
-  HEAD_CLOSED, HEAD_SLIGHT, HEAD_WIDE, HEAD_BLINK, HEAD_HAPPY,
-} from '../lib/teacherHeadFrames';
+  FRAME_SLIGHT, FRAME_WIDE, FRAME_BLINK, FRAME_HAPPY,
+} from '../lib/teacherFrames';
 
-const HEAD_FRAMES = {
-  0: HEAD_CLOSED,
-  1: HEAD_SLIGHT,
-  2: HEAD_WIDE,
-  3: HEAD_BLINK,
+const FRAMES = {
+  0: TEACHER_IMG,
+  1: FRAME_SLIGHT,
+  2: FRAME_WIDE,
+  3: FRAME_BLINK,
 };
 
 export default function TeacherFigure({ state = 'idle', leanBoard = false, mouthFrame = 0, className = '' }) {
@@ -31,9 +30,9 @@ export default function TeacherFigure({ state = 'idle', leanBoard = false, mouth
     }, 3400);
     return () => { alive = false; clearInterval(id); clearTimeout(off); };
   }, []);
-  const headSrc = blinking
-    ? HEAD_BLINK
-    : (state === 'happy' ? HEAD_HAPPY : (HEAD_FRAMES[mouthFrame] || HEAD_CLOSED));
+  const src = blinking
+    ? FRAME_BLINK
+    : (state === 'happy' ? FRAME_HAPPY : (FRAMES[mouthFrame] || TEACHER_IMG));
   return (
     <div className="teacher-bob-wrap">
       <div
@@ -42,8 +41,7 @@ export default function TeacherFigure({ state = 'idle', leanBoard = false, mouth
         role="img"
         aria-label="JARVISH, your AI teacher"
       >
-        <img src={TEACHER_IMG} alt="" className="teacher-layer teacher-body" aria-hidden="true" draggable="false" />
-        <img src={headSrc} alt="JARVISH, your AI teacher" className="teacher-layer teacher-head" draggable="false" />
+        <img src={src} alt="JARVISH, your AI teacher" className="teacher-img" draggable="false" />
       </div>
     </div>
   );

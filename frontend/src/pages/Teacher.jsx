@@ -51,8 +51,15 @@ export default function Teacher() {
 
   // Preview/test hook: ?mouth=0..3 forces a mouth frame (2 = wide open,
   // 3 = blink) with the speaking pose, so the face can be screenshotted.
+  // ?mouth=auto starts the speaking state with the mouth timer running,
+  // so the timer-driven mouth can be verified without a real voice.
   useEffect(() => {
     const m = searchParams.get('mouth');
+    if (m === 'auto') {
+      setAvatarState('speaking');
+      startMouthTimer();
+      return;
+    }
     if (m !== null && /^[0-3]$/.test(m)) {
       setMouthFrame(parseInt(m, 10));
       setAvatarState('speaking');
@@ -74,10 +81,29 @@ export default function Teacher() {
   const [boardTopic, setBoardTopic] = useState(null);
   const [boardLine, setBoardLine] = useState(0);
   // mouthFrame is the hook for real mouth variants: it cycles closed /
-  // slightly open / wide open / slightly open on every spoken word
-  // boundary, so the mouth flaps while she talks. Frame 3 is the blink
+  // slightly open / wide open / slightly open while she speaks, so the
+  // mouth flaps in time with the words. Frame 3 is the blink
   // (TeacherFigure blinks on its own every few seconds).
   const [mouthFrame, setMouthFrame] = useState(0);
+  // Timer-driven mouth: speechSynthesis onboundary does not fire
+  // reliably (some browsers/voices never emit word boundaries), so the
+  // mouth is driven by a plain interval while the speaking flag is true.
+  // onboundary is kept only as an extra, never the sole driver.
+  const mouthTimerRef = useRef(null);
+  const stopMouthTimer = () => {
+    if (mouthTimerRef.current) {
+      clearInterval(mouthTimerRef.current);
+      mouthTimerRef.current = null;
+    }
+  };
+  const startMouthTimer = () => {
+    stopMouthTimer();
+    let step = 0;
+    mouthTimerRef.current = setInterval(() => {
+      step += 1;
+      setMouthFrame([0, 1, 2, 1][step % 4]);
+    }, 150);
+  };
   const latestQRef = useRef('');
   const abortRef = useRef(null);
 
@@ -106,6 +132,7 @@ export default function Teacher() {
   useEffect(() => { store.chat = msgs; }, [msgs]);
   useEffect(() => () => {
     stopSpeaking();
+    if (mouthTimerRef.current) clearInterval(mouthTimerRef.current);
     if (listenStopRef.current) listenStopRef.current();
     if (abortRef.current) abortRef.current();
   }, []);
@@ -156,6 +183,7 @@ export default function Teacher() {
     setContinuous(false);
     stopListeningLoop();
     stopSpeaking();
+    stopMouthTimer();
     setMouthFrame(0);
     setAvatarState('idle');
     setCaption('');
@@ -172,10 +200,12 @@ export default function Teacher() {
     stopListeningLoop();
     setAvatarState('speaking');
     setCaption(plain);
+    startMouthTimer();
     let ended = false;
     const finish = () => {
       if (ended) return;
       ended = true;
+      stopMouthTimer();
       setMouthFrame(0);
       setAvatarState('happy');
       setTimeout(() => setAvatarState((a) => (a === 'happy' ? 'idle' : a)), 4000);
@@ -184,7 +214,7 @@ export default function Teacher() {
     speak(
       plain,
       lang,
-      (i) => { advanceBoardLine(i, plain); setMouthFrame([0, 1, 2, 1][i % 4]); },
+      (i) => { advanceBoardLine(i, plain); },
       finish,
     );
     // Safety net: headless browsers or missing voices may never fire onend.
