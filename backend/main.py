@@ -23,10 +23,12 @@ GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 SYSTEM_PROMPT = (
     "You are JARVISH, a friendly AI teacher for Indian school students "
-    "in Classes 1 to 12. Answer in simple, clear language a school student "
-    "can understand. Use short paragraphs, bold key terms, and bullet lists "
-    "where helpful. If the user writes in Hindi, answer in Hindi. Keep "
-    "answers focused and under 250 words unless the question needs more."
+    "in Classes 1 to 12. You explain out loud, like a teacher talking in "
+    "class. Keep every answer SHORT and spoken: at most 4 short sentences, "
+    "plain simple words, no headings, no bullet lists, no markdown, no "
+    "asterisks, no long explanations. If the question needs an equation or "
+    "a diagram, say it in one short sentence and stop — the green board "
+    "shows the rest. If the user writes in Hindi, answer in Hindi."
 )
 
 app = FastAPI(title="JARVISH demo backend")
@@ -62,70 +64,15 @@ class NotesRequest(BaseModel):
 # against keywords in the user's latest question.
 
 DEMO_TOPICS = [
-    (["photosynthesis"], """**Photosynthesis** is how green plants make their own food using sunlight.
-- Plants take in **carbon dioxide** from the air and **water** from the soil.
-- **Chlorophyll**, the green pigment in leaves, captures sunlight.
-- The plant turns these into **glucose** (food) and releases **oxygen**.
-**Equation:** 6CO2 + 6H2O + sunlight -> C6H12O6 + 6O2
-**Why it matters:** Almost all life on Earth depends on photosynthesis, directly or indirectly, for food and oxygen. Try this: keep one potted plant in sunlight and one in a dark cupboard for a week — the one in the dark will turn pale and weak!"""),
-    (["newton", "laws of motion", "force"], """**Newton's Laws of Motion** describe how things move.
-- **First Law (Inertia):** An object stays at rest or keeps moving in a straight line unless a force acts on it. That is why you lurch forward when a bus stops suddenly.
-- **Second Law (F = ma):** Force = mass x acceleration. Pushing a light cycle is easier than pushing a heavy cart because the cart has more mass.
-- **Third Law (Action-Reaction):** Every action has an equal and opposite reaction. A rocket pushes hot gases down, and the gases push the rocket up.
-**Worked example:** A 2 kg ball is pushed with a force of 10 N. Its acceleration = F / m = 10 / 2 = **5 m/s^2**."""),
-    (["fraction"], """**Fractions** show a part of a whole.
-- A fraction has a **numerator** (top number, parts taken) and a **denominator** (bottom number, total parts).
-- Example: 3/4 of a pizza means the pizza is cut into 4 equal parts and you ate 3.
-- **Adding fractions:** first make the denominators equal. 1/2 + 1/4 = 2/4 + 1/4 = **3/4**.
-- **Simplifying:** divide top and bottom by the same number. 6/8 = **3/4**.
-**Worked example:** A class has 40 students and 3/5 are girls. Number of girls = 3/5 x 40 = **24**."""),
-    (["electric", "current", "circuit"], """**Electricity** is the flow of electric charge, usually through a wire.
-- **Current** is the flow of electrons, measured in **amperes (A)**.
-- **Voltage** is the push that moves the charge, measured in **volts (V)**.
-- **Resistance** opposes the flow, measured in **ohms (Ω)**.
-- **Ohm's Law:** V = I x R (voltage = current x resistance).
-**Worked example:** A bulb has a resistance of 10 Ω and is connected to a 20 V battery. Current = V / R = 20 / 10 = **2 A**.
-**Safety tip:** Never touch switches or plugs with wet hands — water conducts electricity!"""),
-    (["water cycle", "rain", "evaporation"], """The **Water Cycle** is how water keeps moving between the Earth and the sky.
-- **Evaporation:** Heat from the Sun turns water from seas, lakes and rivers into vapour.
-- **Condensation:** The vapour cools high up and forms tiny droplets — these are **clouds**.
-- **Precipitation:** When droplets get heavy, they fall as **rain** (or snow).
-- **Collection:** Rainwater gathers in rivers, lakes and underground, and the cycle starts again.
-**Why it matters:** The water cycle gives us fresh drinking water and rain for crops, and it has been running for billions of years — the water you drink today may once have been drunk by a dinosaur!"""),
-    (["algebra", "equation", "solve for x"], """**Algebra** is maths with letters standing for unknown numbers.
-- A **variable** (like x) stands for a number we do not know yet.
-- An **equation** says two things are equal, e.g. x + 5 = 12.
-- **Golden rule:** do the same operation on both sides to keep the balance.
-**Worked example:** Solve 2x + 3 = 11.
-1. Subtract 3 from both sides: 2x = 8
-2. Divide both sides by 2: x = **4**
-3. Check: 2(4) + 3 = 11. Correct!
-**Tip:** Always check your answer by putting it back into the original equation."""),
-    (["india", "indian", "delhi", "constitution"], """**India — quick facts for school:**
-- **Capital:** New Delhi. **Largest city:** Mumbai.
-- **National animal:** Bengal Tiger. **National bird:** Indian Peacock.
-- **National flower:** Lotus. **National river:** Ganga.
-- India became independent on **15 August 1947**, and the Constitution came into force on **26 January 1950** (Republic Day).
-- India has **28 states and 8 Union Territories**.
-- The **Indian National Congress** was founded in 1885, and the freedom movement was led by leaders like Mahatma Gandhi, Jawaharlal Nehru and Subhas Chandra Bose.
-**Remember this:** India is the world's largest democracy — over 900 million people are eligible to vote!"""),
-    (["code", "coding", "python", "programming"], """**Coding basics** — how to start thinking like a programmer.
-- A **program** is a set of step-by-step instructions a computer follows.
-- A **variable** stores a value, e.g. `name = "Asha"`.
-- A **loop** repeats work, e.g. `for i in range(5): print(i)` prints 0 to 4.
-- An **if statement** makes decisions, e.g. `if marks >= 40: print("Pass")`.
-**Worked example (Python):**
-```python
-for number in range(1, 6):
-    print(number * 2)   # prints 2, 4, 6, 8, 10
-```
-**Tip:** Start with small programs, run them, break them, fix them — that is how real programmers learn."""),
-    (["lightning", "thunder"], """**Why do we see lightning before we hear thunder?**
-- **Light travels much faster than sound.** Light moves at about **3,00,000 km per second**, while sound moves at only about **343 metres per second** in air.
-- Lightning and thunder are made at the **same moment** — the lightning flash heats the air so fast that it expands with a loud bang.
-- Because light reaches your eyes almost instantly and sound takes time, you **see the flash first** and hear the thunder a few seconds later.
-**Worked example:** If you count 3 seconds between the flash and the thunder, the storm is about 3 x 343 = **1,029 metres** (roughly 1 km) away. Every 3 seconds of gap means about 1 km of distance!
-**Safety tip:** During a thunderstorm, stay indoors and away from tall trees and metal objects."""),
+    (["photosynthesis"], "Photosynthesis is how green plants make their own food. The plant takes sunlight, water and carbon dioxide, and turns them into food and oxygen. Look at the board, I have drawn it for you."),
+    (["newton", "laws of motion", "force"], "Newton's first law is simple. A thing stays still until something pushes it, and a moving thing keeps moving until something stops it. That is why you lurch forward when the bus stops suddenly."),
+    (["fraction"], "A fraction is a part of a whole. The bottom number tells you how many equal parts there are, and the top number tells you how many you take. Look at the board, I have drawn a pizza to show you."),
+    (["electric", "current", "circuit"], "Electricity is the flow of tiny charged particles called electrons through a wire. The voltage is the push that moves them, and the current is how fast they flow. Ohm's law ties them together: voltage equals current times resistance."),
+    (["water cycle", "rain", "evaporation"], "The water cycle is how water keeps moving between the Earth and the sky. The Sun heats water and it rises as vapour, then it cools, forms clouds, and falls back as rain."),
+    (["algebra", "equation", "solve for x"], "In algebra, a letter like x stands for a number we do not know yet. To find it, do the same thing on both sides of the equals sign until x is alone. Look at the board, I will work one out for you."),
+    (["india", "indian", "delhi", "constitution"], "India became independent on 15 August 1947, and the Constitution came into force on 26 January 1950. New Delhi is the capital, and India is the world's largest democracy."),
+    (["code", "coding", "python", "programming"], "Coding is giving a computer step-by-step instructions. You store values in variables, repeat work with loops, and make decisions with if statements. Start small, run it, break it, fix it. That is how real programmers learn."),
+    (["lightning", "thunder"], "Light travels much faster than sound. The flash and the thunder are made at the same moment, but light reaches your eyes almost instantly, so you see the flash first. Count the seconds between the flash and the thunder, every three seconds means the storm is about one kilometre away."),
 ]
 
 def demo_answer(question: str) -> str:
@@ -134,17 +81,13 @@ def demo_answer(question: str) -> str:
     for keywords, text in DEMO_TOPICS:
         if any(k in q for k in keywords):
             return text
-    # Generic fallback: explain the topic named in the question.
+    # Generic fallback: a short spoken explanation of the topic.
     topic = question.strip().rstrip("?").strip() or "this topic"
-    return f"""Here is a simple explanation of **{topic}**.
-
-- **What it is:** {topic} is an important idea you will meet often in school. Start by breaking it into small parts and understanding each part one by one.
-- **Key points to remember:** write down the main definitions, learn any formula or rule step by step, and connect the idea to something you see in daily life.
-- **How to study it:** read your textbook chapter once, make short notes in your own words, solve 3-4 practice questions, and revise the notes the next day.
-
-**Worked example:** Take any question on {topic} and solve it in three steps — (1) write down what is given, (2) choose the right rule or formula, (3) calculate carefully and check your answer.
-
-*Note: this is a demo answer. Set GROQ_API_KEY to get full AI answers from JARVISH.*"""
+    return (
+        f"Here is the simple idea behind {topic}. Break it into small parts "
+        f"and understand each part one by one. Then connect it to something "
+        f"you see in daily life, and it will stick."
+    )
 
 async def demo_stream(text: str):
     """Yield the text word by word, mimicking a streaming LLM."""
@@ -159,7 +102,7 @@ async def groq_stream(messages: list[dict]):
         "model": MODEL,
         "messages": messages,
         "temperature": 0.7,
-        "max_tokens": 800,
+        "max_tokens": 320,
         "stream": True,
     }
     headers = {

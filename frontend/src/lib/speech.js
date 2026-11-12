@@ -48,7 +48,53 @@ export function stopSpeaking() {
   if (speechSupported()) window.speechSynthesis.cancel();
 }
 
-// Listen once. onResult(text, isFinal) as words come in.
+// Continuous listening for the START / STOP talk mode.
+// Keeps the mic open: every finished sentence is handed to onFinal,
+// half-heard words to onInterim. The recogniser restarts itself after
+// pauses or quiet errors, until stop() is called. Returns stop().
+export function startContinuousListening(lang, onFinal, onInterim, onError) {
+  const Ctor = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!Ctor) { onError && onError('not-supported'); return () => {}; }
+  let active = true;
+  let rec = null;
+
+  const make = () => {
+    const r = new Ctor();
+    r.lang = lang === 'hi' ? 'hi-IN' : 'en-IN';
+    r.interimResults = true;
+    r.continuous = true;
+    r.onresult = (e) => {
+      let interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const res = e.results[i];
+        if (res.isFinal) {
+          const t = res[0].transcript.trim();
+          if (t) onFinal(t);
+        } else {
+          interim += res[0].transcript;
+        }
+      }
+      if (interim.trim()) onInterim(interim);
+    };
+    r.onerror = (e) => {
+      // Quiet-room errors are normal; the loop restarts itself.
+      if (e.error && e.error !== 'no-speech' && e.error !== 'aborted') {
+        onError && onError(e.error);
+      }
+    };
+    r.onend = () => {
+      if (active) setTimeout(() => { if (active) { rec = make(); rec.start(); } }, 250);
+    };
+    return r;
+  };
+
+  rec = make();
+  try { rec.start(); } catch { /* already started */ }
+  return () => {
+    active = false;
+    try { rec.abort(); } catch { /* ignore */ }
+  };
+}
 export function listenOnce(lang, onResult, onError) {
   const Ctor = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!Ctor) { onError && onError('not-supported'); return null; }

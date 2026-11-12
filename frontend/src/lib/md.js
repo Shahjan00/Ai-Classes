@@ -38,3 +38,22 @@ export function renderMarkdown(text) {
   if (inList) html += '</ul>';
   return html;
 }
+
+// Strip every Markdown marker and return plain spoken text.
+// Used for speech synthesis and the live caption, so a stray "**" or
+// heading can never be read out loud or shown on screen.
+export function stripMarkdown(text) {
+  return (text || '')
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/__([^_]+)__/g, '$1')
+    .replace(/\*([^*]+)\*/g, '$1')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/^\s*[-*]\s+/gm, '')
+    .replace(/^\s*\d+\.\s+/gm, '')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/[<>]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
