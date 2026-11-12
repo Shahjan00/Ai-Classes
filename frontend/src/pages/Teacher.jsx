@@ -18,6 +18,7 @@ import {
   speechSupported, recognitionSupported,
 } from '../lib/speech';
 import { store } from '../lib/store';
+import { TEACHER_IMG } from '../lib/teacherImage';
 import { useToast } from '../App';
 
 const STATUS = {
@@ -260,14 +261,14 @@ export default function Teacher() {
           {boardMode ? (
             <>
               <div className="teacher-side">
-                <img src="/teacher.png" alt="JARVISH, your AI teacher" className={imgClass} />
+                <img src={TEACHER_IMG} alt="JARVISH, your AI teacher" className={imgClass} />
                 <p className="stage-status">{STATUS[avatar] || STATUS.idle}</p>
               </div>
               <GreenBoard topic={boardTopic} activeLine={boardLine} />
             </>
           ) : (
             <div className="teacher-center">
-              <img src="/teacher.png" alt="JARVISH, your AI teacher" className={imgClass} />
+              <img src={TEACHER_IMG} alt="JARVISH, your AI teacher" className={imgClass} />
               <p className="stage-status">{STATUS[avatar] || STATUS.idle}</p>
             </div>
           )}
