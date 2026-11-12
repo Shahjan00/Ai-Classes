@@ -1,0 +1,278 @@
+=== (a) GET /health ===
+{"ok":true,"groq":false,"model":"openai/gpt-oss-20b","mode":"demo"}
+=== (b) POST /api/chat: Why do we see lightning before we hear thunder? ===
+data: {"token": "**Why "}
+
+data: {"token": "do "}
+
+data: {"token": "we "}
+
+data: {"token": "see "}
+
+data: {"token": "lightning "}
+
+data: {"token": "before "}
+
+data: {"token": "we "}
+
+data: {"token": "hear "}
+
+data: {"token": "thunder?**\n- "}
+
+data: {"token": "**Light "}
+
+data: {"token": "travels "}
+
+data: {"token": "much "}
+
+data: {"token": "faster "}
+
+data: {"token": "than "}
+
+data: {"token": "sound.** "}
+
+data: {"token": "Light "}
+
+data: {"token": "moves "}
+
+data: {"token": "at "}
+
+data: {"token": "about "}
+
+data: {"token": "**3,00,000 "}
+
+data: {"token": "km "}
+
+data: {"token": "per "}
+
+data: {"token": "second**, "}
+
+data: {"token": "while "}
+
+data: {"token": "sound "}
+
+data: {"token": "moves "}
+
+data: {"token": "at "}
+
+data: {"token": "only "}
+
+data: {"token": "about "}
+
+data: {"token": "**343 "}
+
+data: {"token": "metres "}
+
+data: {"token": "per "}
+
+data: {"token": "second** "}
+
+data: {"token": "in "}
+
+data: {"token": "air.\n- "}
+
+data: {"token": "Lightning "}
+
+data: {"token": "and "}
+
+data: {"token": "thunder "}
+
+data: {"token": "are "}
+
+data: {"token": "made "}
+
+data: {"token": "at "}
+
+data: {"token": "the "}
+
+data: {"token": "**same "}
+
+data: {"token": "moment** "}
+
+data: {"token": "\u2014 "}
+
+data: {"token": "the "}
+
+data: {"token": "lightning "}
+
+data: {"token": "flash "}
+
+data: {"token": "heats "}
+
+data: {"token": "the "}
+
+data: {"token": "air "}
+
+data: {"token": "so "}
+
+data: {"token": "fast "}
+
+data: {"token": "that "}
+
+data: {"token": "it "}
+
+data: {"token": "expands "}
+
+data: {"token": "with "}
+
+data: {"token": "a "}
+
+data: {"token": "loud "}
+
+data: {"token": "bang.\n- "}
+
+data: {"token": "Because "}
+
+data: {"token": "light "}
+
+data: {"token": "reaches "}
+
+data: {"token": "your "}
+
+data: {"token": "eyes "}
+
+data: {"token": "almost "}
+
+data: {"token": "instantly "}
+
+data: {"token": "and "}
+
+data: {"token": "sound "}
+
+data: {"token": "takes "}
+
+data: {"token": "time, "}
+
+data: {"token": "you "}
+
+data: {"token": "**see "}
+
+data: {"token": "the "}
+
+data: {"token": "flash "}
+
+data: {"token": "first** "}
+
+data: {"token": "and "}
+
+data: {"token": "hear "}
+
+data: {"token": "the "}
+
+data: {"token": "thunder "}
+
+data: {"token": "a "}
+
+data: {"token": "few "}
+
+data: {"token": "seconds "}
+
+data: {"token": "later.\n**Worked "}
+
+data: {"token": "example:** "}
+
+data: {"token": "If "}
+
+data: {"token": "you "}
+
+data: {"token": "count "}
+
+data: {"token": "3 "}
+
+data: {"token": "seconds "}
+
+data: {"token": "between "}
+
+data: {"token": "the "}
+
+data: {"token": "flash "}
+
+data: {"token": "and "}
+
+data: {"token": "the "}
+
+data: {"token": "thunder, "}
+
+data: {"token": "the "}
+
+data: {"token": "storm "}
+
+data: {"token": "is "}
+
+data: {"token": "about "}
+
+data: {"token": "3 "}
+
+data: {"token": "x "}
+
+data: {"token": "343 "}
+
+data: {"token": "= "}
+
+data: {"token": "**1,029 "}
+
+data: {"token": "metres** "}
+
+data: {"token": "(roughly "}
+
+data: {"token": "1 "}
+
+data: {"token": "km) "}
+
+data: {"token": "away. "}
+
+data: {"token": "Every "}
+
+data: {"token": "3 "}
+
+data: {"token": "seconds "}
+
+data: {"token": "of "}
+
+data: {"token": "gap "}
+
+data: {"token": "means "}
+
+data: {"token": "about "}
+
+data: {"token": "1 "}
+
+data: {"token": "km "}
+
+data: {"token": "of "}
+
+data: {"token": "distance!\n**Safety "}
+
+data: {"token": "tip:** "}
+
+data: {"token": "During "}
+
+data: {"token": "a "}
+
+data: {"token": "thunderstorm, "}
+
+data: {"token": "stay "}
+
+data: {"token": "indoors "}
+
+data: {"token": "and "}
+
+data: {"token": "away "}
+
+data: {"token": "from "}
+
+data: {"token": "tall "}
+
+data: {"token": "trees "}
+
+data: {"token": "and "}
+
+data: {"token": "metal "}
+
+data: {"token": "objects. "}
+
+data: {"done": true, "demo": true}
+
+
+=== (c) POST /api/notes ===
+{"notes":"# Light — Science (Class 10)\n## 1. What this chapter is about\nLight is a key chapter in Science for Class 10. Read it once slowly, then make your own short notes — writing in your own words is the fastest way to remember.\n## 2. Key terms to remember\n- **Definition 1:** the most important idea of the chapter — learn it word for word.\n- **Definition 2:** the second core idea, and how it connects to the first.\n- **Formula / Rule:** write the main formula here and practise using it in 3-4 questions.\n## 3. Main points\n1. Start with the basics: what the chapter is trying to explain.\n2. Learn each concept with one daily-life example.\n3. Practise the solved examples from your textbook before the exercises.\n4. Note the common mistakes students make, and how to avoid them.\n## 4. Quick revision questions\n1. What is the main idea of Light?\n2. Explain the most important term in your own words.\n3. Solve one numerical or practice question from the chapter.\n4. Give one real-life example of this chapter's concept.\n## 5. Exam tips\n- Revise these notes the next day, then again after a week.\n- Draw a diagram or flow chart — it earns marks and aids memory.\n- In the exam, write neat headings and underline key terms.\n*Demo notes — set GROQ_API_KEY for full AI-generated notes.*"}
