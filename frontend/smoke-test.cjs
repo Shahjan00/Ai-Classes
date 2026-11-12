@@ -45,15 +45,58 @@ fs.mkdirSync(SHOTS, { recursive: true });
   console.log('--- CONVO LOG ---\n' + chatText);
   const boardVisible = await page.evaluate(() => !!document.querySelector('.board'));
   console.log('board visible:', boardVisible);
+  // Close the floating window so the teacher and board are fully visible,
+  // then catch her mid-speech: the head should be nodding (speaking state).
+  await page.click('text=Close convo');
+  await page.waitForTimeout(800);
+  await page.screenshot({ path: `${SHOTS}/teacher-speaking.png` });
+  await page.screenshot({ path: `${SHOTS}/teacher-board.png` });
+
+  // Realtime board, fresh question with no fixed topic: 'why is the sky
+  // blue?' must draw a FLOW diagram from the backend spec, not one of
+  // the old fixed diagrams.
+  await page.fill('.teacher-ask input', 'why is the sky blue?');
+  await page.click('.teacher-ask .send-btn');
+  await page.waitForFunction(
+    () => document.querySelector('.board-title')?.innerText.includes('WHY THE SKY LOOKS BLUE'),
+    undefined,
+    { timeout: 15000 },
+  );
+  await page.waitForTimeout(2000);
+  await page.screenshot({ path: `${SHOTS}/teacher-board-sky.png` });
+
+  // Realtime board, bar comparison: a second fresh question must draw
+  // BARS from the backend spec.
+  await page.fill('.teacher-ask input', 'Which planet is bigger, Earth or Jupiter?');
+  await page.click('.teacher-ask .send-btn');
+  await page.waitForFunction(
+    () => document.querySelector('.board-title')?.innerText.includes('BIGGEST PLANETS'),
+    undefined,
+    { timeout: 15000 },
+  );
+  await page.waitForTimeout(2000);
+  await page.screenshot({ path: `${SHOTS}/teacher-board-bars.png` });
+
+  // Mouth frames: force the wide-open mouth and the blink frame via the
+  // ?mouth= preview hook and screenshot each, so a head jump between
+  // frames would show up here. (Hash-only navigation does not remount,
+  // so reload to run the mount hook fresh.)
+  await page.goto('http://127.0.0.1:4173/#/teacher-ai?mouth=2', { waitUntil: 'networkidle' });
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.waitForTimeout(1200);
+  await page.screenshot({ path: `${SHOTS}/teacher-mouth-open.png` });
+  await page.goto('http://127.0.0.1:4173/#/teacher-ai?mouth=3', { waitUntil: 'networkidle' });
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.waitForTimeout(1200);
+  await page.screenshot({ path: `${SHOTS}/teacher-blink.png` });
+
   // Save this chat from the floating window, then confirm it lands on
   // the student dashboard (via Demo login).
+  await page.click('text=Open convo');
+  await page.waitForTimeout(800);
   await page.click('text=Save chat');
   await page.waitForFunction(() => document.body.innerText.includes('✓ Saved'), undefined, { timeout: 5000 });
   console.log('save flash: ✓ Saved');
-  // Close the floating window so the board shot is clean.
-  await page.click('text=Close convo');
-  await page.waitForTimeout(500);
-  await page.screenshot({ path: `${SHOTS}/teacher-board.png` });
 
   // Demo login, then the saved chat must show on the dashboard.
   await page.goto('http://127.0.0.1:4173/#/login', { waitUntil: 'networkidle' });
