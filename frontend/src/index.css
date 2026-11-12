@@ -282,14 +282,15 @@ label { font-weight: 600; font-size: 13px; }
 .teacher-area.board-mode { justify-content: flex-start; }
 .teacher-center { display: flex; flex-direction: column; align-items: center; }
 .teacher-side { width: 220px; flex: none; display: flex; flex-direction: column; align-items: center; }
-/* The teacher, one full figure: no split, no clip, no seam. The whole
-   figure swaps between five aligned frames (mouth closed, slightly
-   open, wide open, blink, happy), so a face line is impossible by
-   construction. Life comes from the whole figure: a gentle bob on the
-   outer wrap, a slight tilt while she speaks, a lean toward the board
-   (kept as CSS vars so the lean survives inside the animations). */
+/* The teacher, as AI video: while she speaks the real Flow video plays
+   (muted, looped); otherwise she stands still as the base image. Life
+   comes from the whole figure: a gentle bob on the outer wrap, a slight
+   tilt while she speaks, a lean toward the board (kept as CSS vars so
+   the lean survives inside the animations). The video frame is 720x1280,
+   so the video figure is wider than the old cropped image was. */
 .teacher-bob-wrap { display: inline-block; animation: teacher-bob 5s ease-in-out infinite; }
 .teacher-figure { position: relative; aspect-ratio: 356 / 1084; transform: translateX(var(--lean-x, 0)) rotate(var(--lean-r, 0deg)); transition: transform 0.45s var(--ease); }
+.teacher-figure.video { aspect-ratio: 720 / 1280; }
 .teacher-figure .teacher-img {
   width: 100%; height: 100%;
   object-fit: contain; display: block;

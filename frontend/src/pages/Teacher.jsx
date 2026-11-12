@@ -10,7 +10,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import GreenBoard from '../components/GreenBoard';
 import ConvoWidget from '../components/ConvoWidget';
-import TeacherFigure from '../components/TeacherFigure';
+import TeacherVideo from '../components/TeacherVideo';
 import { matchBoardTopic } from '../lib/boardTopics';
 import { stripMarkdown } from '../lib/md';
 import { streamChat, fetchBoardSpec } from '../lib/api';
@@ -49,23 +49,6 @@ export default function Teacher() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Preview/test hook: ?mouth=0..3 forces a mouth frame (2 = wide open,
-  // 3 = blink) with the speaking pose, so the face can be screenshotted.
-  // ?mouth=auto starts the speaking state with the mouth timer running,
-  // so the timer-driven mouth can be verified without a real voice.
-  useEffect(() => {
-    const m = searchParams.get('mouth');
-    if (m === 'auto') {
-      setAvatarState('speaking');
-      startMouthTimer();
-      return;
-    }
-    if (m !== null && /^[0-3]$/.test(m)) {
-      setMouthFrame(parseInt(m, 10));
-      setAvatarState('speaking');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
   const [msgs, setMsgs] = useState(() => (store.chat.length ? store.chat : [WELCOME]));
   const [input, setInput] = useState('');
   const [lang, setLang] = useState('en');
@@ -80,30 +63,6 @@ export default function Teacher() {
   const [layout, setLayout] = useState('center');
   const [boardTopic, setBoardTopic] = useState(null);
   const [boardLine, setBoardLine] = useState(0);
-  // mouthFrame is the hook for real mouth variants: it cycles closed /
-  // slightly open / wide open / slightly open while she speaks, so the
-  // mouth flaps in time with the words. Frame 3 is the blink
-  // (TeacherFigure blinks on its own every few seconds).
-  const [mouthFrame, setMouthFrame] = useState(0);
-  // Timer-driven mouth: speechSynthesis onboundary does not fire
-  // reliably (some browsers/voices never emit word boundaries), so the
-  // mouth is driven by a plain interval while the speaking flag is true.
-  // onboundary is kept only as an extra, never the sole driver.
-  const mouthTimerRef = useRef(null);
-  const stopMouthTimer = () => {
-    if (mouthTimerRef.current) {
-      clearInterval(mouthTimerRef.current);
-      mouthTimerRef.current = null;
-    }
-  };
-  const startMouthTimer = () => {
-    stopMouthTimer();
-    let step = 0;
-    mouthTimerRef.current = setInterval(() => {
-      step += 1;
-      setMouthFrame([0, 1, 2, 1][step % 4]);
-    }, 150);
-  };
   const latestQRef = useRef('');
   const abortRef = useRef(null);
 
@@ -132,7 +91,6 @@ export default function Teacher() {
   useEffect(() => { store.chat = msgs; }, [msgs]);
   useEffect(() => () => {
     stopSpeaking();
-    if (mouthTimerRef.current) clearInterval(mouthTimerRef.current);
     if (listenStopRef.current) listenStopRef.current();
     if (abortRef.current) abortRef.current();
   }, []);
@@ -183,8 +141,6 @@ export default function Teacher() {
     setContinuous(false);
     stopListeningLoop();
     stopSpeaking();
-    stopMouthTimer();
-    setMouthFrame(0);
     setAvatarState('idle');
     setCaption('');
   };
@@ -200,13 +156,10 @@ export default function Teacher() {
     stopListeningLoop();
     setAvatarState('speaking');
     setCaption(plain);
-    startMouthTimer();
     let ended = false;
     const finish = () => {
       if (ended) return;
       ended = true;
-      stopMouthTimer();
-      setMouthFrame(0);
       setAvatarState('happy');
       setTimeout(() => setAvatarState((a) => (a === 'happy' ? 'idle' : a)), 4000);
       if (continuousRef.current) setTimeout(() => { if (continuousRef.current) startListeningLoop(); }, 500);
@@ -228,7 +181,6 @@ export default function Teacher() {
     stopSpeaking();
     stopListeningLoop();
     setCaption('');
-    setMouthFrame(0);
     // Board or center? Ask the backend for a realtime board spec for ANY
     // question, in parallel with the answer. A null spec means no visual
     // helps, so the teacher stays centered. If the backend cannot be
@@ -322,14 +274,14 @@ export default function Teacher() {
           {boardMode ? (
             <>
               <div className="teacher-side">
-                <TeacherFigure state={avatar} leanBoard mouthFrame={mouthFrame} className="teacher-side-figure" />
+                <TeacherVideo state={avatar} leanBoard className="teacher-side-figure" />
                 <p className="stage-status">{STATUS[avatar] || STATUS.idle}</p>
               </div>
               <GreenBoard topic={boardTopic} activeLine={boardLine} />
             </>
           ) : (
             <div className="teacher-center">
-              <TeacherFigure state={avatar} mouthFrame={mouthFrame} className="teacher-center-figure" />
+              <TeacherVideo state={avatar} className="teacher-center-figure" />
               <p className="stage-status">{STATUS[avatar] || STATUS.idle}</p>
             </div>
           )}
