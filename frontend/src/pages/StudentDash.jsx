@@ -56,6 +56,31 @@ export default function StudentDash() {
             <Link to="/progress" className="btn btn-ghost btn-sm">Full progress →</Link>
           </div>
         </div>
+
+        <div className="card" style={{ maxWidth: 720, marginTop: 24 }}>
+          <h3>Saved chats</h3>
+          {store.savedChats.length === 0 ? (
+            <p style={{ marginTop: 8 }}>No saved chats yet. Talk to the AI Teacher, then tap “Save chat” in the conversation window to keep one here.</p>
+          ) : (
+            store.savedChats.map((c) => (
+              <div key={c.id} style={{ display: 'flex', gap: 14, padding: '14px 0', borderBottom: '1px solid var(--line)', alignItems: 'start' }}>
+                <span style={{ fontSize: 20 }}>💬</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <strong>{c.title}</strong>
+                  <p style={{ margin: 0, color: 'var(--ink-soft)', fontSize: 14 }}>
+                    {new Date(c.when).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} · {c.count} messages
+                  </p>
+                </div>
+                <button
+                  className="chip"
+                  onClick={() => { store.deleteSavedChat(c.id); window.location.reload(); }}
+                >
+                  Delete
+                </button>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </section>
   );

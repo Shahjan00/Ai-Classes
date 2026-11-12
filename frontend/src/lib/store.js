@@ -27,4 +27,22 @@ export const store = {
     s[setId] = { score, total, when: new Date().toISOString() };
     write('quizScores', s);
   },
+  get savedChats() { return read('savedChats', []); },
+  saveChat(messages) {
+    const list = read('savedChats', []);
+    const firstQ = (messages.find((m) => m.role === 'user') || {}).text || 'Conversation';
+    const chat = {
+      id: Date.now(),
+      title: firstQ.length > 60 ? firstQ.slice(0, 60) + '…' : firstQ,
+      when: new Date().toISOString(),
+      count: messages.length,
+      messages,
+    };
+    list.unshift(chat);
+    write('savedChats', list.slice(0, 20));
+    return chat;
+  },
+  deleteSavedChat(id) {
+    write('savedChats', read('savedChats', []).filter((c) => c.id !== id));
+  },
 };
