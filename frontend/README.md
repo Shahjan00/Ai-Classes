@@ -20,15 +20,20 @@ The chat and notes pages talk to the FastAPI backend in `../backend`
 ## How the pieces fit
 
 - `src/pages/` — one file per page, plain React, no extra libraries.
-- `src/components/Avatar.jsx` — the talking avatar. Its state machine
-  (idle / listening / thinking / speaking / happy) is driven by the chat
-  page and by speech-synthesis word-boundary events.
+- `src/components/Avatar.jsx` — the talking teacher, drawn as a layered
+  SVG. Her state machine (idle / listening / thinking / speaking /
+  happy) is driven by the chat page and by speech-synthesis
+  word-boundary events; her mouth follows the voice, her eyes blink and
+  look around, and she points at the green board when a question needs
+  a diagram.
+- `src/components/GreenBoard.jsx` — the green chalkboard the teacher
+  explains on, with diagrams and equations for the board topics.
+- `src/lib/boardTopics.js` — which questions go to the board, and what
+  the board shows for each one.
 - `src/lib/speech.js` — browser speech in/out (Web Speech API, free).
 - `src/lib/api.js` — backend calls, including the SSE chat stream.
 - `src/lib/md.js` — a tiny safe Markdown renderer (no raw `**bold**` leaks).
 - `src/lib/store.js` — localStorage for the demo user, chat and progress.
-- `src/lib/avatarData.js` — the teacher photo inlined as a data URI so
-  the hero visual works even where image CDNs are blocked.
 
 ## Smoke test
 

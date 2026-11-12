@@ -235,3 +235,66 @@ label { font-weight: 600; font-size: 13px; }
 .quiz-opt.right { background: #e7f8ef; border-color: var(--green); }
 .quiz-opt.wrong { background: #fdecea; border-color: var(--red); }
 .codebox { background: var(--ink); color: #e8f5e9; border-radius: 16px; padding: 20px; font-family: ui-monospace, monospace; font-size: 14px; white-space: pre-wrap; min-height: 180px; }
+
+/* ---------- teacher stage (AI Teacher page) ---------- */
+.stage {
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: linear-gradient(180deg, #fffdf5 0%, #f4f4f1 100%);
+  padding: 28px 28px 20px; overflow: hidden;
+}
+.teacher-svg { width: 100%; height: auto; display: block; }
+.teacher-center { max-width: 340px; margin: 0 auto; }
+.teacher-side { width: 230px; flex: none; }
+.stage-board {
+  display: flex; gap: 24px; align-items: stretch;
+}
+.stage-board .board { flex: 1; min-width: 0; }
+@media (max-width: 900px) {
+  .stage-board { flex-direction: column; }
+  .teacher-side { width: 180px; margin: 0 auto; }
+}
+.stage-status {
+  margin: 10px 0 0; text-align: center; font-size: 13.5px;
+  font-weight: 600; color: var(--ink-soft);
+}
+/* teacher animation: gentle sway + head nod while speaking */
+.teacher-sway { animation: teacher-sway 5s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
+@keyframes teacher-sway { 0%, 100% { transform: rotate(-0.6deg); } 50% { transform: rotate(0.6deg); } }
+.teacher-head { transform-box: fill-box; transform-origin: 50% 92%; }
+.teacher-head.talking { animation: head-nod 1.5s ease-in-out infinite; }
+@keyframes head-nod { 0%, 100% { transform: rotate(-1.4deg) translateY(0); } 50% { transform: rotate(1.4deg) translateY(1.5px); } }
+
+/* ---------- talk bar (START / STOP) ---------- */
+.talk-bar { display: flex; align-items: center; gap: 18px; margin-top: 20px; flex-wrap: wrap; }
+.talk-btn { padding: 16px 32px; font-size: 16px; }
+.talk-hint { margin: 0; color: var(--ink-soft); font-size: 14.5px; max-width: 520px; }
+.caption-box { margin-top: 18px; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 16px 18px; }
+.controls-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; }
+
+/* ---------- green chalkboard ---------- */
+.board {
+  background: #2e5d46; border: 12px solid #8a5a2b; border-radius: 10px;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.22), inset 0 0 60px rgba(0, 0, 0, 0.25);
+  color: #f5f5e8; padding: 22px 26px; display: flex;
+}
+.board-inner { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.board-title {
+  font-family: var(--font-display); font-weight: 900; text-transform: uppercase;
+  font-size: clamp(20px, 2.4vw, 30px); letter-spacing: 0.02em; color: #fff;
+  border-bottom: 2px dashed rgba(245, 245, 232, 0.4); padding-bottom: 10px;
+}
+.board-diagram { width: 100%; max-width: 420px; height: auto; margin-top: 14px; }
+.board-lines { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.board-line {
+  font-size: 17px; line-height: 1.45; color: #f5f5e8;
+  opacity: 0; animation: chalk-in 0.5s ease forwards;
+}
+.board-line .board-num { color: #ffd94d; font-weight: 700; margin-right: 6px; }
+.board-line.active { color: #fff; box-shadow: inset 0 -3px 0 #ffd94d; align-self: flex-start; }
+.board-line.done { opacity: 0.75; }
+@keyframes chalk-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.board-eq {
+  margin-top: auto; padding-top: 16px; font-family: var(--font-display);
+  font-weight: 800; font-size: clamp(17px, 2vw, 23px); color: #ffd94d;
+  letter-spacing: 0.01em;
+}
