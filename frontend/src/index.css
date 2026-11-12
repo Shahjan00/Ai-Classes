@@ -282,15 +282,23 @@ label { font-weight: 600; font-size: 13px; }
 .teacher-area.board-mode { justify-content: flex-start; }
 .teacher-center { display: flex; flex-direction: column; align-items: center; }
 .teacher-side { width: 220px; flex: none; display: flex; flex-direction: column; align-items: center; }
-/* The teacher, as AI video: while she speaks the real Flow video plays
-   (muted, looped); otherwise she stands still as the base image. Life
-   comes from the whole figure: a gentle bob on the outer wrap, a slight
-   tilt while she speaks, a lean toward the board (kept as CSS vars so
-   the lean survives inside the animations). The video frame is 720x1280,
-   so the video figure is wider than the old cropped image was. */
+/* The teacher is a robot now, pure SVG: a screen face, glowing eyes, a
+   mouth that opens and closes while he speaks, an antenna that glows
+   while he listens or thinks, and a wave when he is happy. Life comes
+   from the whole figure: a gentle bob on the outer wrap, a slight tilt
+   while he speaks, a lean toward the board (kept as CSS vars so the
+   lean survives inside the animations). */
 .teacher-bob-wrap { display: inline-block; animation: teacher-bob 5s ease-in-out infinite; }
 .teacher-figure { position: relative; aspect-ratio: 356 / 1084; transform: translateX(var(--lean-x, 0)) rotate(var(--lean-r, 0deg)); transition: transform 0.45s var(--ease); }
-.teacher-figure.video { aspect-ratio: 720 / 1280; }
+.teacher-figure.robot { aspect-ratio: 360 / 540; }
+/* Robot mouth: flaps while he speaks. transform-box makes the SVG rect
+   scale around its own centre. */
+.teacher-figure.speaking .robot-mouth { transform-box: fill-box; transform-origin: center; animation: robot-talk 0.32s ease-in-out infinite; }
+/* Antenna glows while he listens or thinks. */
+.teacher-figure.listening .robot-antenna-tip,
+.teacher-figure.thinking .robot-antenna-tip { animation: robot-pulse 1s ease-in-out infinite; }
+/* Right arm waves when he is happy. */
+.teacher-figure.happy .robot-wave-arm { transform-box: fill-box; transform-origin: top center; animation: robot-wave 0.55s ease-in-out infinite; }
 .teacher-figure .teacher-img {
   width: 100%; height: 100%;
   object-fit: contain; display: block;
@@ -430,6 +438,9 @@ label { font-weight: 600; font-size: 13px; }
 .fade-up { animation: fade-up 0.5s var(--ease) both; }
 @keyframes fade-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes teacher-bob { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-6px) rotate(0.5deg); } }
+@keyframes robot-talk { 0%, 100% { transform: scaleY(0.35); } 50% { transform: scaleY(1); } }
+@keyframes robot-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+@keyframes robot-wave { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-24deg); } }
 @keyframes figure-speak { 0%, 100% { transform: translateX(var(--lean-x, 0)) rotate(calc(var(--lean-r, 0deg) + 0.6deg)) translateY(1px); } 50% { transform: translateX(var(--lean-x, 0)) rotate(calc(var(--lean-r, 0deg) - 0.6deg)) translateY(-2px); } }
 @keyframes figure-listen { 0%, 100% { transform: translateX(var(--lean-x, 0)) rotate(calc(var(--lean-r, 0deg) - 1deg)); } 50% { transform: translateX(var(--lean-x, 0)) rotate(calc(var(--lean-r, 0deg) + 0.7deg)) translateY(-1px); } }
 @keyframes board-in { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }

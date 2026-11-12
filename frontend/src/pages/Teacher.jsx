@@ -10,8 +10,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import GreenBoard from '../components/GreenBoard';
 import ConvoWidget from '../components/ConvoWidget';
-import TeacherVideo from '../components/TeacherVideo';
-import { matchBoardTopic } from '../lib/boardTopics';
+import RobotTeacher from '../components/RobotTeacher';
+import { matchBoardTopic, genericBoardSpec } from '../lib/boardTopics';
 import { stripMarkdown } from '../lib/md';
 import { streamChat, fetchBoardSpec } from '../lib/api';
 import {
@@ -222,8 +222,22 @@ export default function Teacher() {
       },
       () => {
         setBusy(false);
-        if (full.trim()) speakAnswer(full);
-        else {
+        if (full.trim()) {
+          // No board yet (the backend had nothing and no canned topic
+          // matched)? Build a fresh one from the answer itself, so the
+          // board always generates for the question instead of showing
+          // an old example. A real backend spec arriving late still
+          // replaces this one.
+          if (!boardTopicRef.current) {
+            const spec = genericBoardSpec(latestQRef.current, full);
+            if (spec) {
+              setBoardTopic(spec);
+              setBoardLine(0);
+              setLayout('board');
+            }
+          }
+          speakAnswer(full);
+        } else {
           setAvatarState('idle');
           if (continuousRef.current) setTimeout(startListeningLoop, 500);
         }
@@ -274,14 +288,14 @@ export default function Teacher() {
           {boardMode ? (
             <>
               <div className="teacher-side">
-                <TeacherVideo state={avatar} leanBoard className="teacher-side-figure" />
+                <RobotTeacher state={avatar} leanBoard className="teacher-side-figure" />
                 <p className="stage-status">{STATUS[avatar] || STATUS.idle}</p>
               </div>
               <GreenBoard topic={boardTopic} activeLine={boardLine} />
             </>
           ) : (
             <div className="teacher-center">
-              <TeacherVideo state={avatar} className="teacher-center-figure" />
+              <RobotTeacher state={avatar} className="teacher-center-figure" />
               <p className="stage-status">{STATUS[avatar] || STATUS.idle}</p>
             </div>
           )}
