@@ -165,7 +165,19 @@ DEMO_BOARD_SPECS = [
               "diagram": {"type": "formula-only"},
               "lines": ["a and b are the short sides", "c is the longest side",
                         "Square all three sides", "a squared plus b squared equals c squared"],
-              "equation": "a\u00b2 + b\u00b2 = c\u00b2"}},
+              "equation": "a² + b² = c²"}},
+    {"match": ["embed", "vector"],
+     "spec": {"id": "embeddings", "title": "What Are Embeddings",
+              "diagram": {"type": "flow",
+                          "labels": ["Word", "Vector numbers", "Similar = close", "AI understands"]},
+              "lines": ["A word becomes a list of numbers", "The numbers are the word's vector",
+                        "Similar words get similar numbers", "AI reads the numbers, not the letters"]}},
+    {"match": ["neural", "neuron"],
+     "spec": {"id": "neural-net", "title": "A Neural Network",
+              "diagram": {"type": "flow",
+                          "labels": ["Input", "Hidden layers", "Learns patterns", "Output"]},
+              "lines": ["Numbers go in", "Hidden layers find patterns",
+                        "It learns from examples", "An answer comes out"]}},
 ]
 
 

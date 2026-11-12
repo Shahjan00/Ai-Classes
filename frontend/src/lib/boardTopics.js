@@ -68,6 +68,30 @@ export const FALLBACK_SPECS = [
       'Divide by 2: x = 4',
     ],
   },
+  {
+    id: 'embeddings',
+    title: 'What Are Embeddings',
+    match: ['embed', 'vector'],
+    diagram: { type: 'flow', labels: ['Word', 'Vector numbers', 'Similar = close', 'AI understands'] },
+    lines: [
+      'A word becomes a list of numbers',
+      'The numbers are the word\u2019s vector',
+      'Similar words get similar numbers',
+      'AI reads the numbers, not the letters',
+    ],
+  },
+  {
+    id: 'neural-net',
+    title: 'A Neural Network',
+    match: ['neural', 'neuron'],
+    diagram: { type: 'flow', labels: ['Input', 'Hidden layers', 'Learns patterns', 'Output'] },
+    lines: [
+      'Numbers go in',
+      'Hidden layers find patterns',
+      'It learns from examples',
+      'An answer comes out',
+    ],
+  },
 ];
 
 // Find a fallback board spec for a question, or null for a text-only answer.

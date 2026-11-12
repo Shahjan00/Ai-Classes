@@ -10,7 +10,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import GreenBoard from '../components/GreenBoard';
 import ConvoWidget from '../components/ConvoWidget';
-import RobotTeacher from '../components/RobotTeacher';
+import RobotImg from '../components/RobotImg';
 import { matchBoardTopic, genericBoardSpec } from '../lib/boardTopics';
 import { stripMarkdown } from '../lib/md';
 import { streamChat, fetchBoardSpec } from '../lib/api';
@@ -62,7 +62,6 @@ export default function Teacher() {
   const [continuous, setContinuous] = useState(false);
   const [layout, setLayout] = useState('center');
   const [boardTopic, setBoardTopic] = useState(null);
-  const [boardLine, setBoardLine] = useState(0);
   const latestQRef = useRef('');
   const abortRef = useRef(null);
 
@@ -94,14 +93,6 @@ export default function Teacher() {
     if (listenStopRef.current) listenStopRef.current();
     if (abortRef.current) abortRef.current();
   }, []);
-
-  // Move the pointer to the board line she is explaining right now.
-  const advanceBoardLine = (charIndex, plainText) => {
-    const topic = boardTopicRef.current;
-    if (!topic || !plainText) return;
-    const frac = Math.max(0, Math.min(1, charIndex / plainText.length));
-    setBoardLine(Math.min(topic.lines.length - 1, Math.floor(frac * topic.lines.length)));
-  };
 
   const stopListeningLoop = () => {
     if (listenStopRef.current) {
@@ -145,7 +136,8 @@ export default function Teacher() {
     setCaption('');
   };
 
-  // Speak an answer aloud; the board follows the word boundaries.
+  // Speak an answer aloud. The board is a diagram only, so there is no
+  // line to follow along with; the boundary callback is unused.
   const speakAnswer = (text) => {
     const plain = stripMarkdown(text);
     if (!speakOn || !speechSupported() || !plain) {
@@ -167,7 +159,7 @@ export default function Teacher() {
     speak(
       plain,
       lang,
-      (i) => { advanceBoardLine(i, plain); },
+      null,
       finish,
     );
     // Safety net: headless browsers or missing voices may never fire onend.
@@ -193,13 +185,11 @@ export default function Teacher() {
       if (latestQRef.current !== q) return;
       if (spec) {
         setBoardTopic(spec);
-        setBoardLine(0);
         setLayout('board');
       } else if (error) {
         const topic = matchBoardTopic(q);
         if (topic) {
           setBoardTopic(topic);
-          setBoardLine(0);
           setLayout('board');
         }
       }
@@ -232,7 +222,6 @@ export default function Teacher() {
             const spec = genericBoardSpec(latestQRef.current, full);
             if (spec) {
               setBoardTopic(spec);
-              setBoardLine(0);
               setLayout('board');
             }
           }
@@ -288,14 +277,14 @@ export default function Teacher() {
           {boardMode ? (
             <>
               <div className="teacher-side">
-                <RobotTeacher state={avatar} leanBoard className="teacher-side-figure" />
+                <RobotImg state={avatar} leanBoard className="teacher-side-figure" />
                 <p className="stage-status">{STATUS[avatar] || STATUS.idle}</p>
               </div>
-              <GreenBoard topic={boardTopic} activeLine={boardLine} />
+              <GreenBoard topic={boardTopic} />
             </>
           ) : (
             <div className="teacher-center">
-              <RobotTeacher state={avatar} className="teacher-center-figure" />
+              <RobotImg state={avatar} className="teacher-center-figure" />
               <p className="stage-status">{STATUS[avatar] || STATUS.idle}</p>
             </div>
           )}

@@ -1,9 +1,8 @@
-// The green chalkboard — a GENERIC chalk renderer. It draws whatever the
-// board spec says: the backend (Groq in live mode, the demo table in demo
-// mode) picks the diagram type and fills the content for ANY question, so
-// the board is no longer limited to a handful of fixed topics. Chalk lines
-// appear one by one, top to bottom, and the active line (the one she is
-// pointing at) is underlined in yellow chalk.
+// The green chalkboard — a diagram ONLY. No title, no answer text, no
+// lines: the board is a visual, not a transcript. The backend (Groq in
+// live mode, the demo table in demo mode) picks the diagram type and
+// fills the content for ANY question. The one exception is formula-only,
+// where the formula IS the diagram.
 const CHALK = '#f5f5e8';
 const YELLOW = '#ffd94d';
 
@@ -238,30 +237,17 @@ function Diagram({ diagram }) {
   }
 }
 
-export default function GreenBoard({ topic, activeLine = 0 }) {
+export default function GreenBoard({ topic }) {
   if (!topic) return null;
   const diagram = topic.diagram || {};
   return (
-    <div className="board" key={topic.id} role="img" aria-label={`Green board: ${topic.title}`}>
+    <div className="board" key={topic.id} role="img" aria-label="Green board diagram">
       <div className="board-inner">
-        <div className="board-title">{topic.title}</div>
         {diagram.type === 'formula-only' ? (
           <div className="board-formula">{topic.equation}</div>
         ) : (
           <Diagram diagram={diagram} />
         )}
-        <div className="board-lines">
-          {topic.lines.map((line, i) => (
-            <div
-              key={i}
-              className={`board-line ${i === activeLine ? 'active' : ''} ${i < activeLine ? 'done' : ''}`}
-              style={{ animationDelay: `${0.15 + i * 0.45}s` }}
-            >
-              <span className="board-num">{i + 1}.</span> {line}
-            </div>
-          ))}
-        </div>
-        {diagram.type !== 'formula-only' && topic.equation && <div className="board-eq">{topic.equation}</div>}
       </div>
     </div>
   );

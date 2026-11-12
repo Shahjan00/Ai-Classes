@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import CursorMesh from '../components/CursorMesh'
-import RobotTeacher from '../components/RobotTeacher'
+import RobotImg from '../components/RobotImg'
 
 /* Content is refined from the original site (jarvis-rust-phi.vercel.app).
    The dark "Capabilities we are designing" orbit section is NOT on this
@@ -47,7 +47,7 @@ export default function Home() {
             </div>
           </div>
           <div className="hero-teacher fade-up">
-            <RobotTeacher state="idle" className="hero-teacher-figure" />
+            <RobotImg state="idle" className="hero-teacher-figure" />
             <p className="hero-teacher-caption">Your AI teacher, ready when you are.</p>
           </div>
         </div>
