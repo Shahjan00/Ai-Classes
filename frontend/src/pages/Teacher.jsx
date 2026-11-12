@@ -10,15 +10,15 @@ import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import GreenBoard from '../components/GreenBoard';
 import ConvoWidget from '../components/ConvoWidget';
+import TeacherFigure from '../components/TeacherFigure';
 import { matchBoardTopic } from '../lib/boardTopics';
 import { stripMarkdown } from '../lib/md';
-import { streamChat } from '../lib/api';
+import { streamChat, fetchBoardSpec } from '../lib/api';
 import {
   speak, stopSpeaking, listenOnce, startContinuousListening,
   speechSupported, recognitionSupported,
 } from '../lib/speech';
 import { store } from '../lib/store';
-import { TEACHER_IMG } from '../lib/teacherImage';
 import { useToast } from '../App';
 
 const STATUS = {
@@ -62,6 +62,13 @@ export default function Teacher() {
   const [layout, setLayout] = useState('center');
   const [boardTopic, setBoardTopic] = useState(null);
   const [boardLine, setBoardLine] = useState(0);
+  // mouthFrame is the hook for real mouth variants: it flips 0/1 on every
+  // spoken word boundary. Only frame 0 exists today (the base image), so
+  // nothing visible changes — when the user supplies open/closed-mouth
+  // head images, they go in TeacherFigure's HEAD_FRAMES and the head
+  // starts swapping frames while speaking.
+  const [mouthFrame, setMouthFrame] = useState(0);
+  const latestQRef = useRef('');
   const abortRef = useRef(null);
 
   // Refs so timers and speech callbacks always see fresh values.
@@ -139,6 +146,7 @@ export default function Teacher() {
     setContinuous(false);
     stopListeningLoop();
     stopSpeaking();
+    setMouthFrame(0);
     setAvatarState('idle');
     setCaption('');
   };
@@ -158,6 +166,7 @@ export default function Teacher() {
     const finish = () => {
       if (ended) return;
       ended = true;
+      setMouthFrame(0);
       setAvatarState('happy');
       setTimeout(() => setAvatarState((a) => (a === 'happy' ? 'idle' : a)), 4000);
       if (continuousRef.current) setTimeout(() => { if (continuousRef.current) startListeningLoop(); }, 500);
@@ -165,7 +174,7 @@ export default function Teacher() {
     speak(
       plain,
       lang,
-      (i) => advanceBoardLine(i, plain),
+      (i) => { advanceBoardLine(i, plain); setMouthFrame(i % 2); },
       finish,
     );
     // Safety net: headless browsers or missing voices may never fire onend.
@@ -179,17 +188,30 @@ export default function Teacher() {
     stopSpeaking();
     stopListeningLoop();
     setCaption('');
-    // Board or center? A question that needs an equation or a diagram
-    // goes to the green board; everything else stays in the center.
-    const topic = matchBoardTopic(q);
-    if (topic) {
-      setBoardTopic(topic);
-      setBoardLine(0);
-      setLayout('board');
-    } else {
-      setBoardTopic(null);
-      setLayout('center');
-    }
+    setMouthFrame(0);
+    // Board or center? Ask the backend for a realtime board spec for ANY
+    // question, in parallel with the answer. A null spec means no visual
+    // helps, so the teacher stays centered. If the backend cannot be
+    // reached, fall back to the fixed topics. The layout resets to center
+    // first so a stale board never lingers into the next question.
+    latestQRef.current = q;
+    setBoardTopic(null);
+    setLayout('center');
+    fetchBoardSpec(q, subject, cls, lang).then(({ spec, error }) => {
+      if (latestQRef.current !== q) return;
+      if (spec) {
+        setBoardTopic(spec);
+        setBoardLine(0);
+        setLayout('board');
+      } else if (error) {
+        const topic = matchBoardTopic(q);
+        if (topic) {
+          setBoardTopic(topic);
+          setBoardLine(0);
+          setLayout('board');
+        }
+      }
+    });
     const history = [...msgs.filter((m) => m.role !== 'ai' || m.text !== WELCOME.text), { role: 'user', text: q }];
     setMsgs([...history, { role: 'ai', text: '' }]);
     setInput('');
@@ -246,7 +268,6 @@ export default function Teacher() {
     setLayout('center');
   };
 
-  const imgClass = `teacher-img${avatar === 'speaking' ? ' speaking' : ''}${avatar === 'listening' ? ' listening' : ''}`;
   const boardMode = layout === 'board' && boardTopic;
 
   return (
@@ -261,14 +282,14 @@ export default function Teacher() {
           {boardMode ? (
             <>
               <div className="teacher-side">
-                <img src={TEACHER_IMG} alt="JARVISH, your AI teacher" className={imgClass} />
+                <TeacherFigure state={avatar} leanBoard mouthFrame={mouthFrame} className="teacher-side-figure" />
                 <p className="stage-status">{STATUS[avatar] || STATUS.idle}</p>
               </div>
               <GreenBoard topic={boardTopic} activeLine={boardLine} />
             </>
           ) : (
             <div className="teacher-center">
-              <img src={TEACHER_IMG} alt="JARVISH, your AI teacher" className={imgClass} />
+              <TeacherFigure state={avatar} mouthFrame={mouthFrame} className="teacher-center-figure" />
               <p className="stage-status">{STATUS[avatar] || STATUS.idle}</p>
             </div>
           )}
