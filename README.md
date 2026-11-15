@@ -12,10 +12,12 @@ and the headline features made real.
 - **AI Teacher** — ask anything, Class 1–12, in English or Hindi. Answers
   stream in from Groq (`openai/gpt-oss-20b`), rendered as clean Markdown
   (never raw `**bold**`).
-- **Talking avatar** — a teacher drawn in the app who listens, thinks
-  and speaks, with a lip-synced mouth, blinking eyes and a nodding head.
-  When a question needs a diagram or an equation, she steps to the side
-  and explains it on a green board, line by line, with her pointer stick.
+- **Talking 3D teacher** — Marina, a real 3D scanned teacher, stands in
+  the classroom. She listens, thinks and speaks her answers out loud,
+  sways gently while she talks, and steps to the side to explain on a
+  green board when a question needs a diagram or an equation. Her mouth
+  does not move (she is a static 3D scan, not a video), so she talks
+  with her voice, not lip sync. A robot teacher stays as a backup.
 - **Hindi voice** — ask in Hindi, get a Hindi answer spoken aloud (hi-IN
   voice). Voice input via the browser's Web Speech API. Free.
 - **Notes Maker** — chapter notes in minutes, by class, subject and language.
@@ -36,6 +38,17 @@ and the headline features made real.
 
 ## Run it
 
+One command starts the backend and the frontend together:
+
+```bash
+./start.sh   # then open http://localhost:5173/#/teacher-ai
+```
+
+First run only, it creates the backend venv, installs backend and
+frontend deps. After that it just starts both. Ctrl-C stops both.
+
+Or run them by hand in two terminals:
+
 ```bash
 # backend (needs a Groq key for live AI; works without one in demo mode)
 cd backend
@@ -54,6 +67,11 @@ Without a Groq key the backend serves built-in template answers, streamed
 the same way, and the site shows a "Demo mode · no API key yet" pill.
 Get a free key at https://console.groq.com.
 
+Check it works: open http://localhost:5173/#/teacher-ai, ask
+"What is photosynthesis?" — Marina answers out loud, sways while she
+talks, and draws the diagram on the green board. If she stays silent,
+the backend is not running: start it with `./start.sh` and try again.
+
 ## Deploy
 
 - Frontend: Vercel (free). Set `VITE_API_URL` to the backend URL.
@@ -68,8 +86,8 @@ Pyodide for Python in the browser. Fonts are self-hosted (Archivo + Inter).
 ## Structure
 
 ```
-frontend/   React app (all 14 pages, avatar, speech helpers)
-backend/    FastAPI server — /health, /api/chat (SSE), /api/notes
+frontend/   React app (all 14 pages, Marina 3D teacher, speech helpers)
+backend/    FastAPI server — /api/chat (SSE), /api/board, /api/notes
 ```
 
 Built as a demo for Learnzo.
