@@ -481,3 +481,52 @@ label { font-weight: 600; font-size: 13px; }
 @media (max-width: 900px) {
   .teacher-marina-figure { height: 360px; }
 }
+
+/* NCERT Books library. */
+.ncert-page { background: #fff; }
+.ncert-hero {
+  background:
+    radial-gradient(ellipse 55% 42% at 50% 0%, #fff3c4 0%, rgba(255, 243, 196, 0) 70%),
+    radial-gradient(ellipse 60% 50% at 50% 42%, #fff8dc 0%, #ffffff 62%);
+  padding: 44px 0 40px;
+}
+.ncert-title { margin: 12px 0 0; }
+.ncert-stats { display: flex; gap: 36px; margin-top: 28px; flex-wrap: wrap; }
+.ncert-stats strong { font-family: var(--font-display); font-size: 30px; font-weight: 900; display: block; line-height: 1; }
+.ncert-stats span { font-size: 13px; font-weight: 600; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.08em; }
+.ncert-reader { margin-top: 32px; background: #fff; border: 1.5px solid var(--line); border-radius: var(--radius); padding: 24px; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08); }
+.ncert-reader-head { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
+.ncert-reader-head h2 { font-family: var(--font-display); font-size: 22px; margin: 8px 0 4px; }
+.ncert-reader-head p { margin: 0; color: var(--ink-soft); font-size: 14.5px; }
+.ncert-reader-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.ncert-reader-status { margin: 16px 0 0; color: var(--ink-soft); }
+.ncert-error { color: #b3261e; }
+.ncert-iframe { width: 100%; height: 720px; border: 1px solid var(--line); border-radius: 12px; margin-top: 16px; background: #f4f4f2; }
+.ncert-browser { padding: 32px 0 72px; }
+.ncert-tabs { display: flex; gap: 10px; flex-wrap: wrap; }
+.ncert-tab { font-family: var(--font-display); font-weight: 800; font-size: 18px; padding: 12px 22px; border-radius: 999px; border: 1.5px solid var(--line); background: #fff; cursor: pointer; }
+.ncert-tab-active { background: var(--ink); color: #fff; border-color: var(--ink); }
+.ncert-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 20px; }
+.ncert-chip { font-weight: 600; font-size: 14px; padding: 8px 14px; border-radius: 999px; border: 1.5px solid var(--line); background: #fff; cursor: pointer; }
+.ncert-chip-active { background: var(--yellow); border-color: var(--ink); }
+.ncert-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-top: 24px; }
+.ncert-card { background: #fff; border: 1.5px solid var(--line); border-radius: var(--radius); padding: 22px; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.ncert-card:hover { box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08); }
+.ncert-card-top { display: flex; justify-content: space-between; width: 100%; gap: 12px; }
+.ncert-subject { font-size: 12px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-faint); }
+.ncert-code { font-size: 12px; font-weight: 700; color: var(--ink-soft); background: #f4f4f2; border-radius: 6px; padding: 2px 8px; }
+.ncert-card h3 { font-family: var(--font-display); font-size: 21px; margin: 0; }
+.ncert-meta { margin: 0; color: var(--ink-soft); font-size: 14.5px; }
+.ncert-note { margin: 0; color: var(--ink-soft); font-size: 13.5px; font-style: italic; }
+.ncert-chapters { list-style: none; margin: 8px 0 0; padding: 12px 0 0; border-top: 1px solid var(--line); width: 100%; display: flex; flex-direction: column; gap: 12px; }
+.ncert-chapter { display: flex; flex-direction: column; gap: 8px; }
+.ncert-chapter-info { display: flex; gap: 10px; align-items: flex-start; }
+.ncert-chapter-no { flex: none; width: 26px; height: 26px; border-radius: 50%; background: var(--yellow); display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 800; font-size: 13px; }
+.ncert-chapter-info strong { font-size: 15px; line-height: 1.35; }
+.ncert-chapter-note { color: var(--ink-soft); font-size: 13.5px; }
+.ncert-pattern { display: block; color: #8a6d00; font-size: 12.5px; margin-top: 2px; }
+.ncert-chapter-actions { display: flex; gap: 8px; flex-wrap: wrap; padding-left: 36px; }
+.ncert-footnote { margin-top: 28px; color: var(--ink-soft); font-size: 14px; max-width: 720px; }
+@media (max-width: 900px) {
+  .ncert-iframe { height: 520px; }
+}

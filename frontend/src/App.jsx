@@ -9,6 +9,7 @@ import Marina from './pages/Marina';
 import Notes from './pages/Notes';
 import Coding from './pages/Coding';
 import Quiz from './pages/Quiz';
+import NcertBooks from './pages/NcertBooks';
 import Progress from './pages/Progress';
 import TeacherDash from './pages/TeacherDash';
 import StudentDash from './pages/StudentDash';
@@ -28,6 +29,7 @@ const LINKS = [
   ['/notes-maker', 'Notes Maker'],
   ['/coding-lab', 'Coding Lab'],
   ['/quiz', 'Quiz Centre'],
+  ['/ncert-books', 'NCERT Books'],
   ['/progress', 'Progress'],
   ['/programme', 'Programme'],
   ['/schools', 'For Schools'],
@@ -46,7 +48,7 @@ function Nav() {
       <div className="wrap nav-inner">
         <Link to="/" className="logo">JARVISH<span> AI</span></Link>
         <nav className="nav-links">
-          {LINKS.slice(0, 6).map(([to, label]) => (
+          {LINKS.slice(0, 7).map(([to, label]) => (
             <NavLink key={to} to={to} className={({ isActive }) => (isActive ? 'active' : '')}>{label}</NavLink>
           ))}
         </nav>
@@ -104,6 +106,7 @@ export default function App() {
           <Route path="/notes-maker" element={<Notes />} />
           <Route path="/coding-lab" element={<Coding />} />
           <Route path="/quiz" element={<Quiz />} />
+          <Route path="/ncert-books" element={<NcertBooks />} />
           <Route path="/progress" element={<Progress />} />
           <Route path="/teacher" element={<TeacherDash />} />
           <Route path="/student" element={<StudentDash />} />
