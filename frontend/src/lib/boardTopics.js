@@ -92,6 +92,34 @@ export const FALLBACK_SPECS = [
       'An answer comes out',
     ],
   },
+  {
+    id: 'acids-bases-salts',
+    title: 'Acids, Bases and Salts',
+    match: [
+      'class 10th chemistry chapter 2',
+      'class 10 chemistry chapter 2',
+      '10th chemistry chapter 2',
+      'chemistry chapter 2',
+      'acids, bases and salts',
+      'acids bases and salts',
+      'acid base',
+      'acids and bases',
+      'ph scale',
+      'baking soda',
+      'washing soda',
+      'bleaching powder',
+      'plaster of paris',
+      'common salt',
+    ],
+    diagram: { type: 'flow', labels: ['2.1 Acids + bases react', '2.2 H+ and OH- in water', '2.3 pH scale 0 to 14', '2.4 Salts we use daily'] },
+    equation: 'HCl + NaOH \u2192 NaCl + H2O (neutralisation)',
+    lines: [
+      'Acids react with metals, carbonates and bases. Zn + H2SO4 gives ZnSO4 + H2.',
+      'All acids make H+ ions in water. All bases make OH- ions. HCl + NaOH gives NaCl + H2O.',
+      'pH runs 0 to 14. Below 7 is acidic, 7 is neutral, above 7 is basic. Stomach acid sits near pH 2, toothpaste is basic and protects teeth.',
+      'Common salt NaCl, baking soda NaHCO3, washing soda Na2CO3, bleaching powder CaOCl2, plaster of Paris CaSO4.1/2H2O.',
+    ],
+  },
 ];
 
 // Find a fallback board spec for a question, or null for a text-only answer.
