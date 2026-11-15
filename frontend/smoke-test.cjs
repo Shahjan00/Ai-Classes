@@ -8,6 +8,7 @@ const fs = require('fs');
 
 const SHOTS = '/home/hatch/workspace/jarvis-rebuild';
 fs.mkdirSync(SHOTS, { recursive: true });
+fs.mkdirSync('/tmp/jarvis_shots', { recursive: true });
 
 (async () => {
   const browser = await chromium.launch({
@@ -17,6 +18,23 @@ fs.mkdirSync(SHOTS, { recursive: true });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1400 } });
   page.on('console', (m) => console.log('[console]', m.type(), m.text()));
   page.on('pageerror', (e) => console.log('[pageerror]', e.message));
+
+  // Headless has no voices, so a real utterance errors instantly and
+  // speaking ends before any mouth check. Stub speechSynthesis to hold
+  // the utterance (a voice that talks but sends no boundary events) so
+  // the timer fallback drives the visemes. Plain assignment silently
+  // fails (speechSynthesis is getter-only), so defineProperty is used.
+  await page.addInitScript(() => {
+    const fakeVoice = { name: 'Test Voice', lang: 'en-US', default: true };
+    const stub = {
+      getVoices: () => [fakeVoice],
+      speak: (u) => { window.__heldUtterance = u; },
+      cancel: () => {}, pause: () => {}, resume: () => {},
+      addEventListener: () => {}, removeEventListener: () => {},
+      pending: false, speaking: false, paused: false,
+    };
+    Object.defineProperty(window, 'speechSynthesis', { value: stub, configurable: true });
+  });
 
   // Teacher page, center state (nothing asked yet).
   await page.goto('http://127.0.0.1:4173/#/teacher-ai', { waitUntil: 'networkidle' });
@@ -52,13 +70,13 @@ fs.mkdirSync(SHOTS, { recursive: true });
   await page.screenshot({ path: `${SHOTS}/teacher-speaking.png` });
   await page.screenshot({ path: `${SHOTS}/teacher-board.png` });
 
-  // Realtime board, fresh question with no fixed topic: 'why is the sky
-  // blue?' must draw a FLOW diagram from the backend spec, not one of
-  // the old fixed diagrams.
+  // The board is a diagram only (no title element): check the SVG
+  // diagram content instead. 'why is the sky blue?' must draw a FLOW
+  // diagram from the backend spec, not one of the old fixed diagrams.
   await page.fill('.teacher-ask input', 'why is the sky blue?');
   await page.click('.teacher-ask .send-btn');
   await page.waitForFunction(
-    () => document.querySelector('.board-title')?.innerText.includes('WHY THE SKY LOOKS BLUE'),
+    () => document.querySelector('.board-diagram')?.textContent.includes('Blue scatters'),
     undefined,
     { timeout: 15000 },
   );
@@ -66,56 +84,51 @@ fs.mkdirSync(SHOTS, { recursive: true });
   await page.screenshot({ path: `${SHOTS}/teacher-board-sky.png` });
 
   // Realtime board, bar comparison: a second fresh question must draw
-  // BARS from the backend spec.
+  // BARS from the backend spec (planet size labels on the diagram).
   await page.fill('.teacher-ask input', 'Which planet is bigger, Earth or Jupiter?');
   await page.click('.teacher-ask .send-btn');
   await page.waitForFunction(
-    () => document.querySelector('.board-title')?.innerText.includes('BIGGEST PLANETS'),
+    () => document.querySelector('.board-diagram')?.textContent.includes('Jupiter'),
     undefined,
     { timeout: 15000 },
   );
   await page.waitForTimeout(2000);
   await page.screenshot({ path: `${SHOTS}/teacher-board-bars.png` });
 
-  // Mouth frames: force the wide-open mouth and the blink frame via the
-  // ?mouth= preview hook and screenshot each, plus a tight face close-up
-  // (top 42% of the figure) so any line across the face would show.
-  // (Hash-only navigation does not remount, so reload to run the mount
-  // hook fresh.) A frame swap must not move the body: the closed,
-  // open and blink shots share the same figure position.
+  // Lip-sync: the Ready Player Me teacher moves her mouth with visemes
+  // while she speaks (live state on window.__teacherTalk). Fresh load
+  // for an idle face close-up first, then ask and sample the visemes
+  // live while she speaks. The stubbed voice holds the utterance, so
+  // the timer fallback drives the mouth even with no boundary events.
   const faceShot = async (path) => {
-    const box = await page.locator('.teacher-center-figure').boundingBox();
+    const box = await page.locator('.teacher-rpm-figure').boundingBox();
     await page.screenshot({ path, clip: { x: box.x, y: box.y, width: box.width, height: box.height * 0.42 } });
   };
-  await page.goto('http://127.0.0.1:4173/#/teacher-ai?mouth=2', { waitUntil: 'networkidle' });
-  await page.reload({ waitUntil: 'networkidle' });
-  await page.waitForTimeout(1200);
-  await page.screenshot({ path: `${SHOTS}/teacher-mouth-open.png` });
-  await faceShot(`${SHOTS}/teacher-face-open.png`);
-  await page.goto('http://127.0.0.1:4173/#/teacher-ai?mouth=3', { waitUntil: 'networkidle' });
-  await page.reload({ waitUntil: 'networkidle' });
-  await page.waitForTimeout(1200);
-  await page.screenshot({ path: `${SHOTS}/teacher-blink.png` });
-  await faceShot(`${SHOTS}/teacher-face-blink.png`);
   await page.goto('http://127.0.0.1:4173/#/teacher-ai', { waitUntil: 'networkidle' });
-  await page.reload({ waitUntil: 'networkidle' });
-  await page.waitForTimeout(1200);
-  await faceShot(`${SHOTS}/teacher-face-closed.png`);
-
-  // Timer-driven mouth: ?mouth=auto starts the speaking state with the
-  // mouth interval running (no real voice needed). Sample data-mouth
-  // over ~1.2s; the cycle 0,1,2,1 must show at least 3 distinct values,
-  // proving the timer flips frames live while she speaks.
-  await page.goto('http://127.0.0.1:4173/#/teacher-ai?mouth=auto', { waitUntil: 'networkidle' });
-  await page.reload({ waitUntil: 'networkidle' });
-  await page.waitForTimeout(400);
-  const mouthSeq = [];
-  for (let i = 0; i < 7; i++) {
-    mouthSeq.push(await page.evaluate(() => document.querySelector('.teacher-figure')?.dataset.mouth));
-    await page.waitForTimeout(180);
+  await page.waitForTimeout(2500);
+  await faceShot(`${SHOTS}/teacher-face-idle.png`);
+  await page.fill('.teacher-ask input', 'Why is the sky blue?');
+  await page.click('.teacher-ask .send-btn');
+  await page.waitForFunction(
+    () => document.querySelector('.stage-status')?.innerText.includes('Speaking'),
+    undefined,
+    { timeout: 15000 },
+  );
+  const visemes = [];
+  let maxWeight = 0;
+  for (let i = 0; i < 20; i++) {
+    const t = await page.evaluate(() => window.__teacherTalk || null);
+    if (t) {
+      if (t.viseme && t.viseme !== 'viseme_sil') visemes.push(t.viseme);
+      if (t.weight) maxWeight = Math.max(maxWeight, t.weight);
+    }
+    await page.waitForTimeout(150);
   }
-  console.log('mouth timer sequence:', mouthSeq.join(','));
-  if (new Set(mouthSeq).size < 3) throw new Error('mouth timer did not cycle frames: ' + mouthSeq.join(','));
+  const distinct = [...new Set(visemes)];
+  console.log('lip-sync visemes:', distinct.join(','), '| max weight:', maxWeight.toFixed(2));
+  if (distinct.length < 3) throw new Error('lip-sync did not move the mouth: ' + distinct.join(','));
+  if (maxWeight < 0.3) throw new Error('lip-sync weights too weak: ' + maxWeight.toFixed(2));
+  await faceShot(`${SHOTS}/teacher-face-speaking.png`);
   await page.screenshot({ path: `${SHOTS}/teacher-mouth-live.png` });
 
   // Save this chat from the floating window, then confirm it lands on
