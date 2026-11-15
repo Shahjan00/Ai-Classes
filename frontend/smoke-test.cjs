@@ -39,7 +39,29 @@ fs.mkdirSync('/tmp/jarvis_shots', { recursive: true });
   // Teacher page, center state (nothing asked yet).
   await page.goto('http://127.0.0.1:4173/#/teacher-ai', { waitUntil: 'networkidle' });
   await page.waitForTimeout(1500);
+  await page.waitForFunction(() => window.__classroom && window.__classroom.ready, undefined, { timeout: 20000 });
   await page.screenshot({ path: `${SHOTS}/teacher-center.png` });
+
+  // No rotation, ever: the camera azimuth and her position must not
+  // drift on their own. Sample twice, three seconds apart, in idle.
+  const poseAt = () => page.evaluate(() => {
+    const c = window.__classroom || {};
+    return { az: c.cameraAzimuth, x: c.teacherX, turn: c.bodyTurn };
+  });
+  const pose1 = await poseAt();
+  await page.waitForTimeout(3000);
+  const pose2 = await poseAt();
+  console.log('no-spin pose t0:', JSON.stringify(pose1), 't+3s:', JSON.stringify(pose2));
+  if (pose1.az !== pose2.az || pose1.x !== pose2.x || pose1.turn !== pose2.turn) {
+    throw new Error('the classroom moved on its own: ' + JSON.stringify([pose1, pose2]));
+  }
+  // Her arms hang at her sides in idle: the upper arms point down,
+  // not out. A hanging arm has a world direction near (0, -1, 0).
+  const arms = await page.evaluate(() => window.__classroom && { l: window.__classroom.armLeftDir, r: window.__classroom.armRightDir });
+  console.log('idle arm directions:', JSON.stringify(arms));
+  if (!arms || !arms.l || !arms.r || arms.l[1] > -0.8 || arms.r[1] > -0.8) {
+    throw new Error('arms are not hanging at her sides: ' + JSON.stringify(arms));
+  }
 
   // Open convo floating window and screenshot it.
   await page.click('text=Open convo');
@@ -61,8 +83,11 @@ fs.mkdirSync('/tmp/jarvis_shots', { recursive: true });
   await page.waitForTimeout(2500);
   const chatText = await page.evaluate(() => document.querySelector('.convo-log').innerText);
   console.log('--- CONVO LOG ---\n' + chatText);
-  const boardVisible = await page.evaluate(() => !!document.querySelector('.board'));
-  console.log('board visible:', boardVisible);
+  // The board is a canvas texture inside the 3D classroom now (no DOM
+  // SVG): check the live classroom state instead.
+  const boardState = await page.evaluate(() => window.__classroom || null);
+  console.log('classroom board state:', JSON.stringify(boardState && { mode: boardState.mode, id: boardState.boardId, type: boardState.boardType, labels: boardState.boardLabels }));
+  if (!boardState || boardState.mode !== 'board') throw new Error('teacher did not step to the board');
   // Close the floating window so the teacher and board are fully visible,
   // then catch her mid-speech: the head should be nodding (speaking state).
   await page.click('text=Close convo');
@@ -70,13 +95,14 @@ fs.mkdirSync('/tmp/jarvis_shots', { recursive: true });
   await page.screenshot({ path: `${SHOTS}/teacher-speaking.png` });
   await page.screenshot({ path: `${SHOTS}/teacher-board.png` });
 
-  // The board is a diagram only (no title element): check the SVG
-  // diagram content instead. 'why is the sky blue?' must draw a FLOW
-  // diagram from the backend spec, not one of the old fixed diagrams.
+  // The board is a diagram only (no title element): check the canvas
+  // board labels in the live classroom state instead. 'why is the sky
+  // blue?' must draw a FLOW diagram from the backend spec, not one of
+  // the old fixed diagrams.
   await page.fill('.teacher-ask input', 'why is the sky blue?');
   await page.click('.teacher-ask .send-btn');
   await page.waitForFunction(
-    () => document.querySelector('.board-diagram')?.textContent.includes('Blue scatters'),
+    () => (window.__classroom?.boardLabels || []).join(' ').includes('Blue scatters'),
     undefined,
     { timeout: 15000 },
   );
@@ -88,7 +114,7 @@ fs.mkdirSync('/tmp/jarvis_shots', { recursive: true });
   await page.fill('.teacher-ask input', 'Which planet is bigger, Earth or Jupiter?');
   await page.click('.teacher-ask .send-btn');
   await page.waitForFunction(
-    () => document.querySelector('.board-diagram')?.textContent.includes('Jupiter'),
+    () => (window.__classroom?.boardLabels || []).join(' ').includes('Jupiter'),
     undefined,
     { timeout: 15000 },
   );
@@ -100,9 +126,17 @@ fs.mkdirSync('/tmp/jarvis_shots', { recursive: true });
   // for an idle face close-up first, then ask and sample the visemes
   // live while she speaks. The stubbed voice holds the utterance, so
   // the timer fallback drives the mouth even with no boundary events.
+  // The face close-up crops the top of the classroom canvas, where her
+  // head is in center mode.
   const faceShot = async (path) => {
-    const box = await page.locator('.teacher-rpm-figure').boundingBox();
-    await page.screenshot({ path, clip: { x: box.x, y: box.y, width: box.width, height: box.height * 0.42 } });
+    const box = await page.locator('.classroom-canvas').boundingBox();
+    await page.screenshot({
+      path,
+      clip: {
+        x: box.x + box.width * 0.32, y: box.y + box.height * 0.02,
+        width: box.width * 0.36, height: box.height * 0.5,
+      },
+    });
   };
   await page.goto('http://127.0.0.1:4173/#/teacher-ai', { waitUntil: 'networkidle' });
   await page.waitForTimeout(2500);

@@ -13,14 +13,15 @@ and the headline features made real.
   stream in from Groq (`openai/gpt-oss-20b`), rendered as clean Markdown
   (never raw `**bold**`).
 - **Talking 3D teacher** — a Ready Player Me 3D teacher stands in
-  the classroom. She listens, thinks and speaks her answers out loud,
-  her mouth moves with every word she says (real lip sync from her
-  viseme blendshapes), she blinks and nods while she talks, sways
-  gently, and steps to the side to explain on a green board when a
-  question needs a diagram or an equation. A robot teacher stays as a
-  backup. The model is a Ready Player Me sample avatar for now; when
-  Shahjan sends his own avatar link, it swaps in (see
-  `frontend/src/lib/teacherModel.js`).
+  one classroom scene with the green board, facing the class. She
+  listens, thinks and speaks her answers out loud, her mouth moves with
+  every word she says (real lip sync from her viseme blendshapes), she
+  blinks, breathes and nods while she talks, her arms hang relaxed at
+  her sides, and when a question needs a diagram she steps to the side
+  and points at the board while she explains it. The camera never spins
+  on its own. A robot teacher stays as a backup. The model is a Ready
+  Player Me sample avatar for now; when Shahjan sends his own avatar
+  link, it swaps in (see `frontend/src/lib/teacherModel.js`).
 - **Hindi voice** — ask in Hindi, get a Hindi answer spoken aloud (hi-IN
   voice). Voice input via the browser's Web Speech API. Free.
 - **Notes Maker** — chapter notes in minutes, by class, subject and language.

@@ -422,42 +422,38 @@ label { font-weight: 600; font-size: 13px; }
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
 
-/* ---------- RpmTeacher: the 3D teacher ---------- */
-.rpm-viewer { position: relative; min-width: 0; }
-.rpm-canvas {
-  position: relative; width: 100%; overflow: hidden;
-  border-radius: 24px; background: #fdfcf7;
+/* ---------- ClassroomScene: the 3D classroom ---------- */
+/* One window: the teacher and the green board in the same scene. */
+.classroom-wrap { width: 100%; }
+.classroom-scene { position: relative; min-width: 0; }
+.classroom-canvas {
+  position: relative; width: 100%; height: 560px; overflow: hidden;
+  border-radius: 24px; background: #f6f1e6;
   border: 1.5px solid var(--line);
   box-shadow: 0 18px 44px rgba(17, 17, 16, 0.12);
 }
-.rpm-canvas canvas { display: block; width: 100%; height: 100%; touch-action: none; }
-.rpm-overlay {
+.classroom-canvas canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+.classroom-overlay {
   position: absolute; inset: 0; display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: 12px; text-align: center;
   padding: 24px; color: var(--ink-soft); font-weight: 600;
-  background: rgba(253, 252, 247, 0.82); border-radius: 24px; pointer-events: none;
+  background: rgba(246, 241, 230, 0.82); border-radius: 24px; pointer-events: none;
 }
-.rpm-overlay p { margin: 0; max-width: 420px; }
-.rpm-overlay .btn { pointer-events: auto; }
-.rpm-spinner {
+.classroom-overlay p { margin: 0; max-width: 420px; }
+.classroom-overlay .btn { pointer-events: auto; }
+.classroom-spinner {
   width: 44px; height: 44px; border-radius: 50%;
   border: 4px solid var(--yellow-soft); border-top-color: var(--yellow);
-  animation: rpm-spin 0.9s linear infinite;
+  animation: classroom-spin 0.9s linear infinite;
 }
-@keyframes rpm-spin { to { transform: rotate(360deg); } }
-.rpm-controls { display: flex; align-items: center; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
-.rpm-hint { font-size: 13px; color: var(--ink-faint); font-weight: 600; margin-left: 4px; }
-.rpm-note { font-size: 13.5px; color: var(--ink-soft); margin: 10px 2px 0; max-width: 560px; line-height: 1.5; }
+@keyframes classroom-spin { to { transform: rotate(360deg); } }
+.classroom-note { font-size: 13.5px; color: var(--ink-soft); margin: 10px 2px 0; max-width: 640px; line-height: 1.5; }
 
 /* Teacher style toggle on the AI Teacher page. */
 .teacher-style-toggle { display: flex; gap: 8px; justify-content: center; margin-top: 18px; flex-wrap: wrap; }
 .teacher-style-toggle .btn[aria-pressed="true"] { box-shadow: inset 0 -3px 0 var(--yellow); }
-.teacher-rpm-figure { width: 600px; max-width: 100%; height: 440px; }
-.teacher-side-figure.teacher-rpm-figure { width: 100%; min-width: 0; height: 260px; }
-.teacher-rpm-figure .rpm-canvas { height: 100%; border: none; box-shadow: none; background: transparent; }
-.teacher-rpm-figure .rpm-note { display: none; }
 @media (max-width: 900px) {
-  .teacher-rpm-figure { height: 360px; }
+  .classroom-canvas { height: 440px; }
 }
 
 /* NCERT Books library. */

@@ -1,17 +1,16 @@
-// AI Teacher — the core page. The teacher owns the whole page: no card,
-// no frame, just her in the middle of a light stage (she wears a black
-// suit, so the stage stays light and she reads clearly). Ask a question:
-// text-only answers keep her in the center; equations or diagrams send
-// her to the side and the green board slides into the center. START / STOP
-// for continuous talking, an ask box below, and the full chat experience
-// (controls, bubbles, chips, Save chat) lives in the Open convo floating
-// window, so the teacher page stays clean.
+// AI Teacher — the core page. One classroom window: the 3D teacher and
+// the green board share the same scene. She stands left of centre in
+// front of the board; when a question needs a diagram she steps aside
+// and points at it while she explains. START / STOP for continuous
+// talking, an ask box below, and the full chat experience (controls,
+// bubbles, chips, Save chat) lives in the Open convo floating window,
+// so the teacher page stays clean.
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import GreenBoard from '../components/GreenBoard';
 import ConvoWidget from '../components/ConvoWidget';
 import RobotImg from '../components/RobotImg';
-import RpmTeacher from '../components/RpmTeacher';
+import ClassroomScene from '../components/ClassroomScene';
 import { matchBoardTopic, genericBoardSpec } from '../lib/boardTopics';
 import { stripMarkdown } from '../lib/md';
 import { streamChat, fetchBoardSpec } from '../lib/api';
@@ -282,19 +281,18 @@ export default function Teacher() {
 
   const boardMode = layout === 'board' && boardTopic;
 
-  // 3D teacher or Robot (poses), in the centre or beside the board.
-  // The 3D teacher moves her mouth with the words while she is speaking.
+  // 3D classroom or Robot (poses). The classroom is ONE scene: the
+  // teacher and the green board share the same window, she steps aside
+  // and points when a diagram is on the board. Robot stays as fallback.
   const teacherFigure = (side) => {
     if (teacherStyle === 'rpm') {
       return (
-        <RpmTeacher
+        <ClassroomScene
           speaking={avatar === 'speaking'}
           listening={listening || avatar === 'listening'}
           spokenText={caption}
           wordIndex={spokenWordIndex}
-          height={side ? 260 : 440}
-          showControls={false}
-          className={`teacher-rpm-figure ${side ? 'teacher-side-figure' : 'teacher-center-figure'}`}
+          boardTopic={boardTopic}
         />
       );
     }
@@ -326,9 +324,16 @@ export default function Teacher() {
           </button>
         </div>
 
-        {/* The classroom stage: the teacher owns the whole space. */}
+        {/* The classroom stage: one window, teacher and board together.
+            The 3D classroom owns the whole space; the robot fallback
+            keeps the old side-by-side layout. */}
         <div className={`teacher-area ${boardMode ? 'board-mode' : ''}`}>
-          {boardMode ? (
+          {teacherStyle === 'rpm' ? (
+            <div className="classroom-wrap">
+              {teacherFigure(false)}
+              <p className="stage-status">{STATUS[avatar] || STATUS.idle}</p>
+            </div>
+          ) : boardMode ? (
             <>
               <div className="teacher-side">
                 {teacherFigure(true)}
