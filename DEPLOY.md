@@ -5,18 +5,19 @@ quick, but they need Shahjan's own logins, so they are not done yet.
 
 ## 1. GitHub repo (to host the code)
 
-The Muse GitHub App cannot create repositories by itself.
+The code is already pushed to the real repo:
+**Shahjan00/Ai-Classes** (https://github.com/Shahjan00/Ai-Classes),
+branch `main`. There is no repo named `jarvish-rebuild` to create.
 
-1. On github.com, create a new **public** repository named
-   `jarvish-rebuild` (empty — no README, no .gitignore).
-2. Give the Muse GitHub App access to it:
-   https://github.com/apps/meta-muse-ai/installations/new
-   (or GitHub Settings → Applications → Meta Muse AI → Repository access →
-   add `jarvish-rebuild`).
-3. Then push the local repo (6 commits, already in
-   `~/workspace/jarvis-rebuild`):
-   `git remote add origin https://github.com/Shahjan00/jarvish-rebuild.git`
-   `git push -u origin main`
+If the remote is ever missing locally, re-add it with:
+
+  `git remote add origin https://github.com/Shahjan00/Ai-Classes.git`
+  `git push -u origin main`
+
+Make sure the Muse GitHub App has access to that repo:
+https://github.com/apps/meta-muse-ai/installations/new
+(or GitHub Settings → Applications → Meta Muse AI → Repository access →
+add `Ai-Classes`).
 
 ## 2. Frontend — Vercel (free)
 
