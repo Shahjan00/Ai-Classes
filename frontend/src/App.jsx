@@ -5,7 +5,6 @@ import { NavLink, Route, Routes, Link, useNavigate, useLocation } from 'react-ro
 import { store } from './lib/store';
 import Home from './pages/Home';
 import Teacher from './pages/Teacher';
-import Marina from './pages/Marina';
 import Notes from './pages/Notes';
 import Coding from './pages/Coding';
 import Quiz from './pages/Quiz';
@@ -102,7 +101,6 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/teacher-ai" element={<Teacher />} />
-          <Route path="/marina" element={<Marina />} />
           <Route path="/notes-maker" element={<Notes />} />
           <Route path="/coding-lab" element={<Coding />} />
           <Route path="/quiz" element={<Quiz />} />

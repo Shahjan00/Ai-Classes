@@ -11,7 +11,7 @@ import { useSearchParams } from 'react-router-dom';
 import GreenBoard from '../components/GreenBoard';
 import ConvoWidget from '../components/ConvoWidget';
 import RobotImg from '../components/RobotImg';
-import MarinaViewer from '../components/MarinaViewer';
+import RpmTeacher from '../components/RpmTeacher';
 import { matchBoardTopic, genericBoardSpec } from '../lib/boardTopics';
 import { stripMarkdown } from '../lib/md';
 import { streamChat, fetchBoardSpec } from '../lib/api';
@@ -63,8 +63,12 @@ export default function Teacher() {
   const [continuous, setContinuous] = useState(false);
   const [layout, setLayout] = useState('center');
   const [boardTopic, setBoardTopic] = useState(null);
-  // Marina the 3D teacher is the default. Robot stays as the fallback.
-  const [teacherStyle, setTeacherStyle] = useState('marina');
+  // The Ready Player Me 3D teacher is the default. Robot stays as the fallback.
+  const [teacherStyle, setTeacherStyle] = useState('rpm');
+  // Word index the teacher is speaking right now, for her lip sync.
+  // Driven by real speechSynthesis boundary events; the viewer falls back
+  // to estimated timing when those events never fire.
+  const [spokenWordIndex, setSpokenWordIndex] = useState(-1);
   const latestQRef = useRef('');
   const abortRef = useRef(null);
 
@@ -137,10 +141,12 @@ export default function Teacher() {
     stopSpeaking();
     setAvatarState('idle');
     setCaption('');
+    setSpokenWordIndex(-1);
   };
 
-  // Speak an answer aloud. The board is a diagram only, so there is no
-  // line to follow along with; the boundary callback is unused.
+  // Speak an answer aloud. The boundary callback tells the 3D teacher
+  // which word she is on, so her mouth moves in time with the words.
+  // The board is a diagram only, so there is no line to follow along with.
   const speakAnswer = (text) => {
     const plain = stripMarkdown(text);
     if (!speakOn || !speechSupported() || !plain) {
@@ -151,10 +157,12 @@ export default function Teacher() {
     stopListeningLoop();
     setAvatarState('speaking');
     setCaption(plain);
+    setSpokenWordIndex(-1);
     let ended = false;
     const finish = () => {
       if (ended) return;
       ended = true;
+      setSpokenWordIndex(-1);
       setAvatarState('happy');
       setTimeout(() => setAvatarState((a) => (a === 'happy' ? 'idle' : a)), 4000);
       if (continuousRef.current) setTimeout(() => { if (continuousRef.current) startListeningLoop(); }, 500);
@@ -162,7 +170,11 @@ export default function Teacher() {
     speak(
       plain,
       lang,
-      null,
+      (charIndex) => {
+        // Word index for the boundary: words fully before this position.
+        const idx = plain.slice(0, charIndex).split(/\s+/).filter(Boolean).length;
+        setSpokenWordIndex(idx);
+      },
       finish,
     );
     // Safety net: headless browsers or missing voices may never fire onend.
@@ -176,6 +188,7 @@ export default function Teacher() {
     stopSpeaking();
     stopListeningLoop();
     setCaption('');
+    setSpokenWordIndex(-1);
     // Board or center? Ask the backend for a realtime board spec for ANY
     // question, in parallel with the answer. A null spec means no visual
     // helps, so the teacher stays centered. If the backend cannot be
@@ -262,22 +275,26 @@ export default function Teacher() {
     stopSpeaking();
     setMsgs([WELCOME]);
     setCaption('');
+    setSpokenWordIndex(-1);
     setBoardTopic(null);
     setLayout('center');
   };
 
   const boardMode = layout === 'board' && boardTopic;
 
-  // Marina (3D) or Robot (poses), in the centre or beside the board.
-  // Marina moves a little more while she is speaking or listening.
+  // 3D teacher or Robot (poses), in the centre or beside the board.
+  // The 3D teacher moves her mouth with the words while she is speaking.
   const teacherFigure = (side) => {
-    if (teacherStyle === 'marina') {
+    if (teacherStyle === 'rpm') {
       return (
-        <MarinaViewer
+        <RpmTeacher
           speaking={avatar === 'speaking'}
           listening={listening || avatar === 'listening'}
+          spokenText={caption}
+          wordIndex={spokenWordIndex}
+          height={side ? 260 : 440}
           showControls={false}
-          className={`teacher-marina-figure ${side ? 'teacher-side-figure' : 'teacher-center-figure'}`}
+          className={`teacher-rpm-figure ${side ? 'teacher-side-figure' : 'teacher-center-figure'}`}
         />
       );
     }
@@ -291,14 +308,14 @@ export default function Teacher() {
         <h1 className="display display-md teacher-title">Ask. Listen. Learn.</h1>
         <p className="teacher-tagline">Ask anything, learn anything.</p>
 
-        {/* Marina 3D is the teacher now. Robot stays as backup. */}
+        {/* 3D teacher is the teacher now. Robot stays as backup. */}
         <div className="teacher-style-toggle" role="group" aria-label="Teacher style">
           <button
-            className={`btn btn-sm ${teacherStyle === 'marina' ? 'btn-dark' : 'btn-ghost'}`}
-            aria-pressed={teacherStyle === 'marina'}
-            onClick={() => setTeacherStyle('marina')}
+            className={`btn btn-sm ${teacherStyle === 'rpm' ? 'btn-dark' : 'btn-ghost'}`}
+            aria-pressed={teacherStyle === 'rpm'}
+            onClick={() => setTeacherStyle('rpm')}
           >
-            Marina 3D
+            3D Teacher
           </button>
           <button
             className={`btn btn-sm ${teacherStyle === 'robot' ? 'btn-dark' : 'btn-ghost'}`}
