@@ -421,3 +421,63 @@ label { font-weight: 600; font-size: 13px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
+
+/* ---------- Marina: the 3D teacher ---------- */
+.marina-viewer { position: relative; }
+.marina-canvas {
+  position: relative; width: 100%; overflow: hidden;
+  border-radius: 24px; background: #fdfcf7;
+  border: 1.5px solid var(--line);
+  box-shadow: 0 18px 44px rgba(17, 17, 16, 0.12);
+}
+.marina-canvas canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+.marina-overlay {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 12px; text-align: center;
+  padding: 24px; color: var(--ink-soft); font-weight: 600;
+  background: rgba(253, 252, 247, 0.82); border-radius: 24px; pointer-events: none;
+}
+.marina-overlay p { margin: 0; max-width: 420px; }
+.marina-overlay .btn { pointer-events: auto; }
+.marina-spinner {
+  width: 44px; height: 44px; border-radius: 50%;
+  border: 4px solid var(--yellow-soft); border-top-color: var(--yellow);
+  animation: marina-spin 0.9s linear infinite;
+}
+@keyframes marina-spin { to { transform: rotate(360deg); } }
+.marina-controls { display: flex; align-items: center; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+.marina-hint { font-size: 13px; color: var(--ink-faint); font-weight: 600; margin-left: 4px; }
+.marina-note { font-size: 13.5px; color: var(--ink-soft); margin: 10px 2px 0; max-width: 560px; line-height: 1.5; }
+
+/* Standalone Marina page: bold yellow stage, big display type. */
+.marina-page {
+  background:
+    radial-gradient(ellipse 55% 42% at 50% 0%, #fff3c4 0%, rgba(255, 243, 196, 0) 70%),
+    radial-gradient(ellipse 60% 50% at 50% 42%, #fff8dc 0%, #ffffff 62%);
+  padding: 44px 0 72px;
+}
+.marina-page .teacher-title { font-size: clamp(44px, 7vw, 92px); }
+.marina-hero { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 40px; align-items: center; margin-top: 28px; }
+.marina-facts { display: flex; flex-direction: column; gap: 14px; margin-top: 22px; }
+.marina-fact {
+  display: flex; gap: 14px; align-items: flex-start; background: #fff;
+  border: 1.5px solid var(--line); border-radius: 18px; padding: 16px 18px;
+  box-shadow: 0 8px 24px rgba(17, 17, 16, 0.06);
+}
+.marina-fact .mark { flex: none; font-family: var(--font-display); font-weight: 900; font-size: 20px; border-radius: 10px; }
+.marina-fact strong { display: block; font-size: 16px; }
+.marina-fact p { margin: 2px 0 0; color: var(--ink-soft); font-size: 14.5px; line-height: 1.5; }
+@media (max-width: 900px) {
+  .marina-hero { grid-template-columns: 1fr; }
+}
+
+/* Teacher style toggle on the AI Teacher page. */
+.teacher-style-toggle { display: flex; gap: 8px; justify-content: center; margin-top: 18px; flex-wrap: wrap; }
+.teacher-style-toggle .btn[aria-pressed="true"] { box-shadow: inset 0 -3px 0 var(--yellow); }
+.teacher-marina-figure { height: 440px; }
+.teacher-side-figure.teacher-marina-figure { height: 260px; }
+.teacher-marina-figure .marina-canvas { height: 100%; border: none; box-shadow: none; background: transparent; }
+.teacher-marina-figure .marina-note { display: none; }
+@media (max-width: 900px) {
+  .teacher-marina-figure { height: 360px; }
+}
