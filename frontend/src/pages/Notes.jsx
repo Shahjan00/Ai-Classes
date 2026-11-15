@@ -1,10 +1,12 @@
-// Notes Maker — pick class, subject, chapter, language, length; get
-// clean chapter notes. The original gated this behind sign-in while the
-// chat was open; here it just works.
+// Notes — two parts on one page: (a) Notes Maker, make new notes, and
+// (b) Books, the NCERT library (Class first, then subjects, then chapters
+// on a new page). The original gated notes behind sign-in while the chat
+// was open; here it just works.
 import { useState } from 'react';
 import { renderMarkdown } from '../lib/md';
 import { getNotes } from '../lib/api';
 import { useToast } from '../App';
+import BooksBrowser from '../components/BooksBrowser';
 
 const SUBJECTS = ['Science', 'Maths', 'English', 'Hindi', 'Social Science'];
 const CHAPTERS = {
@@ -40,7 +42,7 @@ export default function Notes() {
   return (
     <section className="section" style={{ paddingTop: 48 }}>
       <div className="wrap">
-        <p className="kicker"><span className="dot">●</span> Notes Maker</p>
+        <p className="kicker"><span className="dot">●</span> Notes</p>
         <h1 className="display display-md" style={{ margin: '10px 0 8px' }}>Chapter notes in minutes</h1>
         <p className="lede">Pick your class and chapter. JARVISH writes clean notes you can actually revise from.</p>
 
@@ -89,6 +91,15 @@ export default function Notes() {
             {!busy && !notes && <p style={{ color: 'var(--ink-faint)' }}>Your notes will appear here. Try Science, Photosynthesis, Class 8.</p>}
             {!busy && notes && <div dangerouslySetInnerHTML={{ __html: renderMarkdown(notes) }} />}
           </div>
+        </div>
+
+        <hr style={{ border: 'none', borderTop: '1.5px solid var(--line)', margin: '56px 0 40px' }} />
+
+        <p className="kicker"><span className="dot">●</span> Books</p>
+        <h2 className="display display-md" style={{ margin: '10px 0 8px' }}>NCERT books, chapter by chapter</h2>
+        <p className="lede">Pick a class, pick a subject, and all its chapters open on a new page. Free, straight from ncert.nic.in.</p>
+        <div style={{ marginTop: 28 }}>
+          <BooksBrowser />
         </div>
       </div>
     </section>

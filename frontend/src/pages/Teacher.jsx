@@ -11,6 +11,7 @@ import GreenBoard from '../components/GreenBoard';
 import ConvoWidget from '../components/ConvoWidget';
 import RobotImg from '../components/RobotImg';
 import ClassroomScene from '../components/ClassroomScene';
+import FaceIdPanel from '../components/FaceIdPanel';
 import { matchBoardTopic, genericBoardSpec } from '../lib/boardTopics';
 import { stripMarkdown } from '../lib/md';
 import { streamChat, fetchBoardSpec } from '../lib/api';
@@ -279,6 +280,14 @@ export default function Teacher() {
     setLayout('center');
   };
 
+  // Face ID recognised the student: greet them by name, out loud and
+  // in the chat, then carry on with the normal talk loop.
+  const greetStudent = (studentName) => {
+    const greeting = `Hi ${studentName}! Great to see you. What should we learn today?`;
+    setMsgs((prev) => [...prev, { role: 'ai', text: greeting }]);
+    speakAnswer(greeting);
+  };
+
   const boardMode = layout === 'board' && boardTopic;
 
   // 3D classroom or Robot (poses). The classroom is ONE scene: the
@@ -364,6 +373,11 @@ export default function Teacher() {
               ? 'Listening — just speak. I will answer, then listen again. Tap STOP when you are done.'
               : 'Tap START, then just talk to your teacher. No typing needed.'}
           </p>
+        </div>
+
+        {/* Face ID: register once, get greeted by name. On-device only. */}
+        <div style={{ marginTop: 20 }}>
+          <FaceIdPanel onRecognized={greetStudent} />
         </div>
 
         {/* Ask box */}

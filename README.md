@@ -24,9 +24,11 @@ and the headline features made real.
   link, it swaps in (see `frontend/src/lib/teacherModel.js`).
 - **Hindi voice** — ask in Hindi, get a Hindi answer spoken aloud (hi-IN
   voice). Voice input via the browser's Web Speech API. Free.
-- **Notes Maker** — chapter notes in minutes, by class, subject and language.
+- **Notes** — chapter notes in minutes, by class, subject and language, plus the NCERT books library on the same page.
+- **NCERT Books** — every official NCERT textbook, Classes 9 to 12. Pick a class, pick a subject, read its chapters. Class 10 Science Chapter 2 reads inside the app.
 - **Coding Lab** — real Python in the browser (Pyodide / WebAssembly), with
-  lessons mapped to classes and a test to pass.
+  56 lessons, Classes 6 to 12, in order, a test to pass and auto-advance.
+- **Face ID** — the teacher recognises you by face and greets you by name. On-device only, nothing is uploaded.
 - **Quiz Centre, Exam Hall, Progress / Teacher / Student dashboards** —
   all working with local progress.
 - **Programme, Schools, About, Contact, Login** — the full original site.
@@ -36,7 +38,7 @@ and the headline features made real.
 - Student Dashboard no longer shows "Sign in" + a stuck "Loading…" card +
   a Logout button at the same time. It shows real state immediately.
 - Toasts auto-dismiss after 3 seconds (the original's stuck around forever).
-- Notes Maker no longer demands sign-in while chat stays open.
+- Notes no longer demands sign-in while chat stays open.
 - AI answers no longer leak raw Markdown.
 - Slow fade-ins that left text near-invisible are gone.
 

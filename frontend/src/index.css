@@ -504,3 +504,14 @@ label { font-weight: 600; font-size: 13px; }
 @media (max-width: 900px) {
   .ncert-iframe { height: 520px; }
 }
+
+/* Face ID panel (Teacher page): camera preview, name row, status line. */
+.faceid-card { margin-top: 0; }
+.faceid-video { width: 220px; max-width: 100%; aspect-ratio: 4 / 3; object-fit: cover; transform: scaleX(-1); border-radius: 16px; border: 1.5px solid var(--line); background: #111110; margin: 12px 0; }
+.faceid-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
+.faceid-row input { flex: 1; min-width: 180px; padding: 10px 14px; border: 1.5px solid var(--line); border-radius: 12px; font-size: 15px; background: #fff; }
+.faceid-msg { margin: 12px 0 0; font-size: 14.5px; font-weight: 600; }
+.faceid-ok { color: var(--green); }
+.faceid-error { color: #b3261e; }
+.ncert-subject-card { cursor: pointer; text-align: left; font: inherit; color: inherit; }
+.ncert-subject-card:hover { box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08); }

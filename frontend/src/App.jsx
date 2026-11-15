@@ -9,6 +9,7 @@ import Notes from './pages/Notes';
 import Coding from './pages/Coding';
 import Quiz from './pages/Quiz';
 import NcertBooks from './pages/NcertBooks';
+import BookChapters from './pages/BookChapters';
 import Progress from './pages/Progress';
 import TeacherDash from './pages/TeacherDash';
 import StudentDash from './pages/StudentDash';
@@ -25,7 +26,7 @@ export const useToast = () => useContext(ToastCtx);
 const LINKS = [
   ['/', 'Home'],
   ['/teacher-ai', 'AI Teacher'],
-  ['/notes-maker', 'Notes Maker'],
+  ['/notes-maker', 'Notes'],
   ['/coding-lab', 'Coding Lab'],
   ['/quiz', 'Quiz Centre'],
   ['/ncert-books', 'NCERT Books'],
@@ -102,6 +103,8 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/teacher-ai" element={<Teacher />} />
           <Route path="/notes-maker" element={<Notes />} />
+          <Route path="/notes" element={<Notes />} />
+          <Route path="/books/:cls/:subject" element={<BookChapters />} />
           <Route path="/coding-lab" element={<Coding />} />
           <Route path="/quiz" element={<Quiz />} />
           <Route path="/ncert-books" element={<NcertBooks />} />

@@ -1,40 +1,11 @@
 // Coding Lab — real Python in the browser via Pyodide (WASM), loaded
 // lazily from the CDN, exactly like the original. Lessons are mapped to
-// classes (the original admitted its levels were not mapped).
-import { useRef, useState } from 'react';
+// classes: 8 per class, Classes 6 to 12, in order. Finishing a lesson
+// marks it done and moves the student to the next one.
+import { useEffect, useRef, useState } from 'react';
 import { store } from '../lib/store';
 import { useToast } from '../App';
-
-const LESSONS = [
-  {
-    id: 'py1', cls: 'Class 6', title: 'Your first print',
-    goal: 'Print "Hello, JARVISH" to the screen.',
-    code: 'print("Hello, JARVISH")',
-    test: 'Hello, JARVISH',
-    hint: 'print() shows text on the screen. Put your words in quotes.',
-  },
-  {
-    id: 'py2', cls: 'Class 7', title: 'Maths with variables',
-    goal: 'Add two numbers and print the total.',
-    code: 'a = 12\nb = 8\nprint(a + b)',
-    test: '20',
-    hint: 'Variables hold numbers. print(a + b) shows their sum.',
-  },
-  {
-    id: 'py3', cls: 'Class 8', title: 'A loop that counts',
-    goal: 'Print the numbers 1 to 5, one per line.',
-    code: 'for i in range(1, 6):\n    print(i)',
-    test: '1\n2\n3\n4\n5',
-    hint: 'range(1, 6) gives 1, 2, 3, 4, 5. The loop repeats print for each.',
-  },
-  {
-    id: 'py4', cls: 'Class 9', title: 'A function that doubles',
-    goal: 'Write a function double(x) that returns twice x, then print double(7).',
-    code: 'def double(x):\n    return x * 2\n\nprint(double(7))',
-    test: '14',
-    hint: 'def makes a function. return sends the answer back.',
-  },
-];
+import { CODING_CLASSES, CODING_LESSONS, lessonsForClass, nextLessonAfter } from '../lib/codingLessons';
 
 // Pyodide (real Python in the browser) from the first CDN that answers.
 const PYODIDE_URLS = [
@@ -58,15 +29,33 @@ function loadPyodide() {
 
 export default function Coding() {
   const toast = useToast();
-  const [lesson, setLesson] = useState(LESSONS[0]);
-  const [code, setCode] = useState(LESSONS[0].code);
+  const [cls, setCls] = useState(6);
+  const [lesson, setLesson] = useState(CODING_LESSONS[0]);
+  const [code, setCode] = useState(CODING_LESSONS[0].code);
   const [output, setOutput] = useState('');
   const [status, setStatus] = useState('idle');
   const [pyReady, setPyReady] = useState(false);
   const [done, setDone] = useState(store.doneLessons);
   const outRef = useRef(null);
+  const advanceTimer = useRef(null);
 
-  const pick = (l) => { setLesson(l); setCode(l.code); setOutput(''); setStatus('idle'); };
+  useEffect(() => () => { if (advanceTimer.current) clearTimeout(advanceTimer.current); }, []);
+
+  const pick = (l) => {
+    if (advanceTimer.current) clearTimeout(advanceTimer.current);
+    setLesson(l); setCls(l.cls); setCode(l.code); setOutput(''); setStatus('idle');
+  };
+
+  const pickClass = (c) => {
+    const list = lessonsForClass(c);
+    const firstOpen = list.find((l) => !store.doneLessons.includes(l.id)) || list[0];
+    pick(firstOpen);
+  };
+
+  const advance = () => {
+    const next = nextLessonAfter(lesson.id);
+    if (next) pick(next);
+  };
 
   const run = async () => {
     setStatus('loading');
@@ -101,7 +90,9 @@ export default function Coding() {
         setStatus('pass');
         store.markLessonDone(lesson.id);
         setDone(store.doneLessons);
-        toast('Test passed. Lesson done.');
+        const next = nextLessonAfter(lesson.id);
+        toast(next ? 'Test passed. Moving to the next lesson.' : 'Test passed. You finished all 56 lessons.');
+        advanceTimer.current = setTimeout(() => { if (next) pick(next); }, 1600);
       } else {
         setStatus('fail');
       }
@@ -111,17 +102,34 @@ export default function Coding() {
     }
   };
 
+  const classLessons = lessonsForClass(cls);
+  const classDone = classLessons.filter((l) => done.includes(l.id)).length;
+  const totalDone = done.filter((id) => CODING_LESSONS.some((l) => l.id === id)).length;
+  const next = nextLessonAfter(lesson.id);
+
   return (
     <section className="section" style={{ paddingTop: 48 }}>
       <div className="wrap">
         <p className="kicker"><span className="dot">●</span> Coding Lab</p>
         <h1 className="display display-md" style={{ margin: '10px 0 8px' }}>Write code. Run it.</h1>
-        <p className="lede">Real Python, running in your browser. No install, no account. Lessons are mapped to your class.</p>
+        <p className="lede">Real Python, running in your browser. No install, no account. 56 lessons, Classes 6 to 12, in order. Finish one and the next one opens. {totalDone} of 56 done so far.</p>
 
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 28 }}>
-          {LESSONS.map((l) => (
+          {CODING_CLASSES.map((c) => {
+            const d = lessonsForClass(c).filter((l) => done.includes(l.id)).length;
+            return (
+              <button key={c} className={`chip ${cls === c ? 'on' : ''}`} onClick={() => pickClass(c)}>
+                Class {c} · {d}/8
+              </button>
+            );
+          })}
+        </div>
+
+        <p style={{ marginTop: 16, fontWeight: 700 }}>Class {cls}: {classDone} of 8 lessons done</p>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 10 }}>
+          {classLessons.map((l, i) => (
             <button key={l.id} className={`chip ${lesson.id === l.id ? 'on' : ''}`} onClick={() => pick(l)}>
-              {done.includes(l.id) ? '✓ ' : ''}{l.cls} · {l.title}
+              {done.includes(l.id) ? '✓ ' : ''}{i + 1}. {l.title}
             </button>
           ))}
         </div>
@@ -129,7 +137,7 @@ export default function Coding() {
         <div className="grid2" style={{ marginTop: 24, alignItems: 'start' }}>
           <div>
             <div className="card">
-              <span className="num">{lesson.cls}</span>
+              <span className="num">Class {lesson.cls} · Lesson {classLessons.findIndex((l) => l.id === lesson.id) + 1} of 8</span>
               <h3>{lesson.title}</h3>
               <p>{lesson.goal}</p>
               <p style={{ marginTop: 10, fontSize: 14 }}><strong>Hint:</strong> {lesson.hint}</p>
@@ -141,13 +149,16 @@ export default function Coding() {
               style={{ width: '100%', marginTop: 16, fontFamily: 'ui-monospace, monospace', fontSize: 15, padding: 16, border: '1.5px solid var(--line)', borderRadius: 16, background: '#111110', color: '#e8f5e9' }}
               spellCheck={false}
             />
-            <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+            <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap' }}>
               <button className="btn btn-yellow" onClick={runAndCheck} disabled={status === 'loading'}>
                 {status === 'loading' ? 'Running…' : '▶ Run + check test'}
               </button>
               <button className="btn btn-ghost" onClick={run} disabled={status === 'loading'}>Run only</button>
+              {status === 'pass' && next && (
+                <button className="btn btn-dark" onClick={advance}>Next lesson →</button>
+              )}
             </div>
-            {status === 'pass' && <p style={{ color: 'var(--green)', fontWeight: 700, marginTop: 14 }}>✓ 1/1 tests passed. Lesson marked done.</p>}
+            {status === 'pass' && <p style={{ color: 'var(--green)', fontWeight: 700, marginTop: 14 }}>✓ 1/1 tests passed. Lesson marked done.{next ? ' Moving to the next lesson…' : ' That was the last one. Brilliant.'}</p>}
             {status === 'fail' && <p style={{ color: 'var(--red)', fontWeight: 700, marginTop: 14 }}>Output did not match yet. Expected: “{lesson.test}”. Read the hint and try again.</p>}
           </div>
           <div>

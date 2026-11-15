@@ -9,7 +9,7 @@
 //      ?morphTargets=ARKit,Oculus%20Visemes so it carries visemes).
 //   2. Base64 it and split it into ~0.9 MB chunks, replacing part1-7.js.
 //   3. Update MODEL_URL below to his link and MODEL_NAME to his avatar.
-// The viewer (RpmTeacher.jsx) loads these bundled bytes by default, so the
+// The classroom scene (ClassroomScene.jsx) loads these bundled bytes by default, so the
 // app never fetches the model at runtime.
 //
 // Source of this sample: a genuine Ready Player Me avatar ("brunette",

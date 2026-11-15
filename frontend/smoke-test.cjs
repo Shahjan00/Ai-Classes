@@ -16,6 +16,25 @@ fs.mkdirSync('/tmp/jarvis_shots', { recursive: true });
     args: ['--no-sandbox', '--disable-gpu'],
   });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1400 } });
+  // This sandbox browser has no external network, so serve the CDN
+  // assets (teacher model, Pyodide, face-api.js) from local copies
+  // that curl verified. On a real browser they load from the CDN.
+  const serveLocal = (dir) => async (route) => {
+    const name = new URL(route.request().url()).pathname.split('/').pop();
+    const path = `${dir}/${name}`;
+    if (fs.existsSync(path)) {
+      await route.fulfill({ path, contentType: name.endsWith('.wasm') ? 'application/wasm' : undefined });
+    } else {
+      await route.abort();
+    }
+  };
+  await page.route('**/pyodide@0.26.4/full/*', serveLocal('/tmp/pyodide'));
+  await page.route('**/pyodide/v0.26.4/full/*', serveLocal('/tmp/pyodide'));
+  await page.route('**/npm/face-api.js@0.22.2/dist/*', serveLocal('/tmp/faceapi'));
+  await page.route('**/face-api.js@master/weights/*', serveLocal('/tmp/faceapi/weights'));
+  await page.route('**/avatars/brunette.glb', async (route) => {
+    await route.fulfill({ path: '/tmp/brunette.glb' });
+  });
   page.on('console', (m) => console.log('[console]', m.type(), m.text()));
   page.on('pageerror', (e) => console.log('[pageerror]', e.message));
 
@@ -221,6 +240,78 @@ fs.mkdirSync('/tmp/jarvis_shots', { recursive: true });
   await page.click('.quiz-opt >> nth=0');
   await page.waitForTimeout(500);
   await page.screenshot({ path: '/tmp/jarvis_shots/quiz.png' });
+
+  // ---- Batch checks: Notes rename + Books on Notes page + books flow ----
+  await page.goto('http://127.0.0.1:4173/#/notes-maker', { waitUntil: 'networkidle' });
+  await page.waitForTimeout(1000);
+  const notesMakerCount = await page.locator('text=Notes Maker').count();
+  console.log('"Notes Maker" mentions left:', notesMakerCount);
+  if (notesMakerCount > 0) throw new Error('"Notes Maker" still appears somewhere');
+  const booksHeading = await page.locator('text=NCERT books, chapter by chapter').count();
+  if (!booksHeading) throw new Error('Books section missing from the Notes page');
+  // The /notes alias route must show the same page.
+  await page.goto('http://127.0.0.1:4173/#/notes', { waitUntil: 'networkidle' });
+  await page.waitForTimeout(800);
+  if (!(await page.locator('text=Chapter notes in minutes').count())) throw new Error('/notes alias does not show the Notes page');
+  // Books flow: Class 10 -> Science -> chapter page.
+  await page.click('.ncert-tab >> text=Class 10');
+  await page.waitForTimeout(500);
+  await page.locator('.ncert-subject-card h3:text-is("Science")').click();
+  await page.waitForFunction(() => location.hash.includes('/books/10/Science'), undefined, { timeout: 10000 });
+  await page.waitForTimeout(800);
+  const ch2 = await page.locator('text=Acids, Bases and Salts').count();
+  if (!ch2) throw new Error('Class 10 Science chapter page missing Ch 2');
+  // Chapter 1 PDF link must be the real NCERT URL, not a broken one.
+  const ch1Href = await page.locator('a:has-text("Open PDF on ncert.nic.in")').first().getAttribute('href');
+  console.log('Ch1 PDF href:', ch1Href);
+  if (ch1Href !== 'https://ncert.nic.in/ncerts/l/jesc101.pdf') throw new Error('wrong Ch1 PDF URL: ' + ch1Href);
+  // In-app reader for the bundled Ch 2.
+  await page.locator('text=Read in app').first().click();
+  await page.waitForSelector('iframe.ncert-iframe', { timeout: 10000 });
+  console.log('in-app Ch2 reader: open');
+  await page.screenshot({ path: `${SHOTS}/books-chapter-page.png` });
+  // Back to Notes, Books section still there.
+  await page.click('text=Back to Notes');
+  await page.waitForFunction(() => location.hash.includes('/notes-maker'), undefined, { timeout: 10000 });
+
+  // ---- Batch checks: Coding Lab classes 6-12, progression ----
+  await page.goto('http://127.0.0.1:4173/#/coding-lab', { waitUntil: 'networkidle' });
+  await page.waitForTimeout(800);
+  for (const c of [6, 7, 8, 9, 10, 11, 12]) {
+    if (!(await page.locator(`.chip >> text=Class ${c}`).count())) throw new Error('missing Class ' + c + ' tab');
+  }
+  if (!(await page.locator('text=Class 6: 0 of 8 lessons done').count())) throw new Error('Class 6 progress line wrong');
+  await page.click('.chip >> text=Class 12');
+  await page.waitForTimeout(500);
+  if (!(await page.locator('text=Class 12: 0 of 8 lessons done').count())) throw new Error('Class 12 progress line wrong');
+  if (!(await page.locator('text=1. Bubble sort').count())) throw new Error('Class 12 lesson 1 missing');
+  await page.click('.chip >> text=Class 6');
+  await page.waitForTimeout(500);
+  // Run the first lesson (py1) through real Pyodide and expect a pass
+  // plus auto-advance to lesson 2.
+  await page.click('text=Run + check test');
+  await page.waitForFunction(
+    () => document.body.innerText.includes('1/1 tests passed'),
+    undefined,
+    { timeout: 90000 },
+  );
+  console.log('coding py1: PASS');
+  await page.waitForFunction(
+    () => document.body.innerText.includes('Print your name'),
+    undefined,
+    { timeout: 10000 },
+  );
+  console.log('coding auto-advance to lesson 2: YES');
+  await page.screenshot({ path: `${SHOTS}/coding-lab.png` });
+
+  // ---- Batch checks: Face ID panel on the Teacher page ----
+  await page.goto('http://127.0.0.1:4173/#/teacher-ai', { waitUntil: 'networkidle' });
+  await page.waitForTimeout(1500);
+  if (!(await page.locator('text=Face ID').count())) throw new Error('Face ID panel missing from Teacher page');
+  if (!(await page.locator('text=Register my face').count())) throw new Error('Face ID register button missing');
+  if (!(await page.locator('text=Your face never leaves this device').count())) throw new Error('Face ID privacy note missing');
+  console.log('face ID panel: present');
+  await page.screenshot({ path: `${SHOTS}/teacher-faceid.png` });
 
   await browser.close();
   console.log('E2E DONE');
