@@ -11,6 +11,7 @@ import { useSearchParams } from 'react-router-dom';
 import GreenBoard from '../components/GreenBoard';
 import ConvoWidget from '../components/ConvoWidget';
 import RobotImg from '../components/RobotImg';
+import MarinaViewer from '../components/MarinaViewer';
 import { matchBoardTopic, genericBoardSpec } from '../lib/boardTopics';
 import { stripMarkdown } from '../lib/md';
 import { streamChat, fetchBoardSpec } from '../lib/api';
@@ -62,6 +63,8 @@ export default function Teacher() {
   const [continuous, setContinuous] = useState(false);
   const [layout, setLayout] = useState('center');
   const [boardTopic, setBoardTopic] = useState(null);
+  // Marina the 3D teacher is the default. Robot stays as the fallback.
+  const [teacherStyle, setTeacherStyle] = useState('marina');
   const latestQRef = useRef('');
   const abortRef = useRef(null);
 
@@ -265,6 +268,22 @@ export default function Teacher() {
 
   const boardMode = layout === 'board' && boardTopic;
 
+  // Marina (3D) or Robot (poses), in the centre or beside the board.
+  // Marina moves a little more while she is speaking or listening.
+  const teacherFigure = (side) => {
+    if (teacherStyle === 'marina') {
+      return (
+        <MarinaViewer
+          speaking={avatar === 'speaking'}
+          listening={listening || avatar === 'listening'}
+          showControls={false}
+          className={`teacher-marina-figure ${side ? 'teacher-side-figure' : 'teacher-center-figure'}`}
+        />
+      );
+    }
+    return <RobotImg state={avatar} leanBoard={side} className={side ? 'teacher-side-figure' : 'teacher-center-figure'} />;
+  };
+
   return (
     <section className="teacher-stage">
       <div className="wrap">
@@ -272,19 +291,37 @@ export default function Teacher() {
         <h1 className="display display-md teacher-title">Ask. Listen. Learn.</h1>
         <p className="teacher-tagline">Ask anything, learn anything.</p>
 
+        {/* Marina 3D is the teacher now. Robot stays as backup. */}
+        <div className="teacher-style-toggle" role="group" aria-label="Teacher style">
+          <button
+            className={`btn btn-sm ${teacherStyle === 'marina' ? 'btn-dark' : 'btn-ghost'}`}
+            aria-pressed={teacherStyle === 'marina'}
+            onClick={() => setTeacherStyle('marina')}
+          >
+            Marina 3D
+          </button>
+          <button
+            className={`btn btn-sm ${teacherStyle === 'robot' ? 'btn-dark' : 'btn-ghost'}`}
+            aria-pressed={teacherStyle === 'robot'}
+            onClick={() => setTeacherStyle('robot')}
+          >
+            Robot
+          </button>
+        </div>
+
         {/* The classroom stage: the teacher owns the whole space. */}
         <div className={`teacher-area ${boardMode ? 'board-mode' : ''}`}>
           {boardMode ? (
             <>
               <div className="teacher-side">
-                <RobotImg state={avatar} leanBoard className="teacher-side-figure" />
+                {teacherFigure(true)}
                 <p className="stage-status">{STATUS[avatar] || STATUS.idle}</p>
               </div>
               <GreenBoard topic={boardTopic} />
             </>
           ) : (
             <div className="teacher-center">
-              <RobotImg state={avatar} className="teacher-center-figure" />
+              {teacherFigure(false)}
               <p className="stage-status">{STATUS[avatar] || STATUS.idle}</p>
             </div>
           )}
