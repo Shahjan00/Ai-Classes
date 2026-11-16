@@ -1,16 +1,12 @@
-// AI Teacher — the core page. One classroom window: the 3D teacher and
-// the green board share the same scene. She stands left of centre in
-// front of the board; when a question needs a diagram she steps aside
-// and points at it while she explains. START / STOP for continuous
-// talking, an ask box below, and the full chat experience (controls,
-// bubbles, chips, Save chat) lives in the Open convo floating window,
-// so the teacher page stays clean.
+// AI Teacher — the core page. One green board: when a question needs a
+// diagram it draws on the board; until then the board waits empty.
+// START / STOP for continuous talking, an ask box below, and the full
+// chat experience (controls, bubbles, chips, Save chat) lives in the
+// Open convo floating window, so the teacher page stays clean.
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import GreenBoard from '../components/GreenBoard';
 import ConvoWidget from '../components/ConvoWidget';
-import RobotImg from '../components/RobotImg';
-import ClassroomScene from '../components/ClassroomScene';
 import FaceIdPanel from '../components/FaceIdPanel';
 import { matchBoardTopic, genericBoardSpec } from '../lib/boardTopics';
 import { stripMarkdown } from '../lib/md';
@@ -63,12 +59,6 @@ export default function Teacher() {
   const [continuous, setContinuous] = useState(false);
   const [layout, setLayout] = useState('center');
   const [boardTopic, setBoardTopic] = useState(null);
-  // The Ready Player Me 3D teacher is the default. Robot stays as the fallback.
-  const [teacherStyle, setTeacherStyle] = useState('rpm');
-  // Word index the teacher is speaking right now, for her lip sync.
-  // Driven by real speechSynthesis boundary events; the viewer falls back
-  // to estimated timing when those events never fire.
-  const [spokenWordIndex, setSpokenWordIndex] = useState(-1);
   const latestQRef = useRef('');
   const abortRef = useRef(null);
 
@@ -141,12 +131,10 @@ export default function Teacher() {
     stopSpeaking();
     setAvatarState('idle');
     setCaption('');
-    setSpokenWordIndex(-1);
   };
 
-  // Speak an answer aloud. The boundary callback tells the 3D teacher
-  // which word she is on, so her mouth moves in time with the words.
-  // The board is a diagram only, so there is no line to follow along with.
+  // Speak an answer aloud. The board is a diagram only, so there is no
+  // line to follow along with.
   const speakAnswer = (text) => {
     const plain = stripMarkdown(text);
     if (!speakOn || !speechSupported() || !plain) {
@@ -157,12 +145,10 @@ export default function Teacher() {
     stopListeningLoop();
     setAvatarState('speaking');
     setCaption(plain);
-    setSpokenWordIndex(-1);
     let ended = false;
     const finish = () => {
       if (ended) return;
       ended = true;
-      setSpokenWordIndex(-1);
       setAvatarState('happy');
       setTimeout(() => setAvatarState((a) => (a === 'happy' ? 'idle' : a)), 4000);
       if (continuousRef.current) setTimeout(() => { if (continuousRef.current) startListeningLoop(); }, 500);
@@ -170,11 +156,7 @@ export default function Teacher() {
     speak(
       plain,
       lang,
-      (charIndex) => {
-        // Word index for the boundary: words fully before this position.
-        const idx = plain.slice(0, charIndex).split(/\s+/).filter(Boolean).length;
-        setSpokenWordIndex(idx);
-      },
+      null,
       finish,
     );
     // Safety net: headless browsers or missing voices may never fire onend.
@@ -188,7 +170,6 @@ export default function Teacher() {
     stopSpeaking();
     stopListeningLoop();
     setCaption('');
-    setSpokenWordIndex(-1);
     // Board or center? Ask the backend for a realtime board spec for ANY
     // question, in parallel with the answer. A null spec means no visual
     // helps, so the teacher stays centered. If the backend cannot be
@@ -275,7 +256,6 @@ export default function Teacher() {
     stopSpeaking();
     setMsgs([WELCOME]);
     setCaption('');
-    setSpokenWordIndex(-1);
     setBoardTopic(null);
     setLayout('center');
   };
@@ -290,24 +270,6 @@ export default function Teacher() {
 
   const boardMode = layout === 'board' && boardTopic;
 
-  // 3D classroom or Robot (poses). The classroom is ONE scene: the
-  // teacher and the green board share the same window, she steps aside
-  // and points when a diagram is on the board. Robot stays as fallback.
-  const teacherFigure = (side) => {
-    if (teacherStyle === 'rpm') {
-      return (
-        <ClassroomScene
-          speaking={avatar === 'speaking'}
-          listening={listening || avatar === 'listening'}
-          spokenText={caption}
-          wordIndex={spokenWordIndex}
-          boardTopic={boardTopic}
-        />
-      );
-    }
-    return <RobotImg state={avatar} leanBoard={side} className={side ? 'teacher-side-figure' : 'teacher-center-figure'} />;
-  };
-
   return (
     <section className="teacher-stage">
       <div className="wrap">
@@ -315,48 +277,21 @@ export default function Teacher() {
         <h1 className="display display-md teacher-title">Ask. Listen. Learn.</h1>
         <p className="teacher-tagline">Ask anything, learn anything.</p>
 
-        {/* 3D teacher is the teacher now. Robot stays as backup. */}
-        <div className="teacher-style-toggle" role="group" aria-label="Teacher style">
-          <button
-            className={`btn btn-sm ${teacherStyle === 'rpm' ? 'btn-dark' : 'btn-ghost'}`}
-            aria-pressed={teacherStyle === 'rpm'}
-            onClick={() => setTeacherStyle('rpm')}
-          >
-            3D Teacher
-          </button>
-          <button
-            className={`btn btn-sm ${teacherStyle === 'robot' ? 'btn-dark' : 'btn-ghost'}`}
-            aria-pressed={teacherStyle === 'robot'}
-            onClick={() => setTeacherStyle('robot')}
-          >
-            Robot
-          </button>
-        </div>
-
-        {/* The classroom stage: one window, teacher and board together.
-            The 3D classroom owns the whole space; the robot fallback
-            keeps the old side-by-side layout. */}
+        {/* The board is the classroom now: no 3D teacher, no robot, and
+            nothing that follows the mouse. A diagram draws here when a
+            question needs one; until then the board waits empty. */}
         <div className={`teacher-area ${boardMode ? 'board-mode' : ''}`}>
-          {teacherStyle === 'rpm' ? (
-            <div className="classroom-wrap">
-              {teacherFigure(false)}
-              <p className="stage-status">{STATUS[avatar] || STATUS.idle}</p>
-            </div>
-          ) : boardMode ? (
-            <>
-              <div className="teacher-side">
-                {teacherFigure(true)}
-                <p className="stage-status">{STATUS[avatar] || STATUS.idle}</p>
-              </div>
-              <GreenBoard topic={boardTopic} />
-            </>
+          {boardTopic ? (
+            <GreenBoard topic={boardTopic} />
           ) : (
-            <div className="teacher-center">
-              {teacherFigure(false)}
-              <p className="stage-status">{STATUS[avatar] || STATUS.idle}</p>
+            <div className="board board-empty" role="img" aria-label="Empty green board">
+              <div className="board-inner">
+                <p className="board-empty-text">Ask me anything.<br />Your lesson will appear here on the board.</p>
+              </div>
             </div>
           )}
         </div>
+        <p className="stage-status">{STATUS[avatar] || STATUS.idle}</p>
 
         {/* Short spoken answer, plain text only — no card, no overlay. */}
         {caption && <p className="teacher-caption">{caption}</p>}
@@ -412,8 +347,6 @@ export default function Teacher() {
         onSend={send}
         onSave={() => { store.saveChat(msgs); toast('Chat saved to your dashboard.'); }}
         onClear={clearChat}
-        onStartTalking={startTalking}
-        onStopTalking={stopTalking}
       />
     </section>
   );

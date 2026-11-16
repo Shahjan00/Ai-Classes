@@ -29,7 +29,6 @@ const LINKS = [
   ['/notes-maker', 'Notes'],
   ['/coding-lab', 'Coding Lab'],
   ['/quiz', 'Quiz Centre'],
-  ['/ncert-books', 'NCERT Books'],
   ['/progress', 'Progress'],
   ['/programme', 'Programme'],
   ['/schools', 'For Schools'],
@@ -43,6 +42,10 @@ function Nav() {
   const user = store.user;
   const nav = useNavigate();
   const logout = () => { store.user = null; nav('/'); };
+  // Mobile menu: the link row is hidden under 900px, so the hamburger
+  // opens a dropdown with every link instead.
+  const [menuOpen, setMenuOpen] = useState(false);
+  const closeMenu = () => setMenuOpen(false);
   return (
     <header className="nav">
       <div className="wrap nav-inner">
@@ -52,16 +55,40 @@ function Nav() {
             <NavLink key={to} to={to} className={({ isActive }) => (isActive ? 'active' : '')}>{label}</NavLink>
           ))}
         </nav>
-        {user ? (
-          <>
-            <span style={{ fontWeight: 600, fontSize: 14 }}>Hi, {user.name}</span>
-            <button className="btn btn-ghost btn-sm" onClick={logout}>Log out</button>
-          </>
-        ) : (
-          <Link to="/login" className="btn btn-dark btn-sm" style={{ marginLeft: 'auto' }}>Sign in</Link>
-        )}
-        <Link to="/teacher-ai" className="btn btn-yellow btn-sm">Try AI Teacher</Link>
+        <div className="nav-actions">
+          {user ? (
+            <>
+              <span style={{ fontWeight: 600, fontSize: 14 }}>Hi, {user.name}</span>
+              <button className="btn btn-ghost btn-sm" onClick={logout}>Log out</button>
+            </>
+          ) : (
+            <Link to="/login" className="btn btn-dark btn-sm" style={{ marginLeft: 'auto' }}>Sign in</Link>
+          )}
+          <Link to="/teacher-ai" className="btn btn-yellow btn-sm">Try AI Teacher</Link>
+        </div>
+        <button
+          type="button"
+          className="nav-toggle"
+          aria-expanded={menuOpen}
+          aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+          onClick={() => setMenuOpen((v) => !v)}
+        >
+          {menuOpen ? '✕' : '☰'}
+        </button>
       </div>
+      {menuOpen && (
+        <nav className="nav-menu" aria-label="Menu">
+          {LINKS.map(([to, label]) => (
+            <NavLink key={to} to={to} onClick={closeMenu} className={({ isActive }) => (isActive ? 'active' : '')}>{label}</NavLink>
+          ))}
+          {user ? (
+            <button className="btn btn-ghost btn-sm" onClick={() => { closeMenu(); logout(); }}>Log out</button>
+          ) : (
+            <Link to="/login" className="btn btn-dark btn-sm" onClick={closeMenu}>Sign in</Link>
+          )}
+          <Link to="/teacher-ai" className="btn btn-yellow btn-sm" onClick={closeMenu}>Try AI Teacher</Link>
+        </nav>
+      )}
     </header>
   );
 }

@@ -112,6 +112,8 @@ img { max-width: 100%; display: block; }
 @media (max-width: 900px) {
   .hero-grid { grid-template-columns: 1fr; gap: 32px; }
   .hero-teacher-figure { height: min(460px, 58vh); }
+  /* 52px floor breaks EVERYTHING. mid-word on a phone: shrink the hero. */
+  .hero h1 { font-size: clamp(40px, 11vw, 52px); }
 }
 .cursor-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
 
@@ -153,7 +155,25 @@ img { max-width: 100%; display: block; }
 .nav-links a { color: var(--ink-soft); }
 .nav-links a:hover, .nav-links a.active { color: var(--ink); }
 .nav-links a.active { box-shadow: inset 0 -3px 0 var(--yellow); }
-@media (max-width: 900px) { .nav-links { display: none; } }
+.nav-actions { display: flex; align-items: center; gap: 12px; }
+.nav-toggle {
+  display: none; margin-left: auto;
+  border: 1.5px solid var(--line); background: #fff; border-radius: 12px;
+  width: 44px; height: 44px; font-size: 20px; line-height: 1; cursor: pointer;
+}
+.nav-menu {
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 12px 20px 16px; border-top: 1px solid var(--line);
+  background: #fff;
+}
+.nav-menu a { padding: 10px 4px; font-weight: 600; font-size: 15px; color: var(--ink-soft); }
+.nav-menu a.active { color: var(--ink); box-shadow: inset 0 -3px 0 var(--yellow); }
+.nav-menu .btn { align-self: flex-start; margin-top: 8px; }
+@media (max-width: 900px) {
+  .nav-links { display: none; }
+  .nav-actions { display: none; }
+  .nav-toggle { display: inline-flex; align-items: center; justify-content: center; }
+}
 
 /* ---------- buttons ---------- */
 .btn {
@@ -391,7 +411,7 @@ label { font-weight: 600; font-size: 13px; }
 }
 .seg button.on { background: var(--ink); color: #fff; }
 .convo-voice-row { display: flex; gap: 8px; flex-wrap: wrap; }
-.convo-log { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; min-height: 0; background: #fff; }
+.convo-log { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; min-height: 140px; background: #fff; }
 .convo-bubble { max-width: 92%; padding: 11px 14px; border-radius: 16px; line-height: 1.5; font-size: 14px; }
 .convo-bubble.user { align-self: flex-end; background: var(--yellow); border-bottom-right-radius: 6px; font-weight: 500; }
 .convo-bubble.ai { align-self: flex-start; background: var(--grey); border-bottom-left-radius: 6px; }
@@ -399,7 +419,8 @@ label { font-weight: 600; font-size: 13px; }
 .convo-ai-label { font-size: 10px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-faint); display: block; margin-bottom: 4px; }
 .convo-empty { color: var(--ink-faint); font-size: 13.5px; text-align: center; margin: auto 0; }
 .convo-typing { color: var(--ink-faint); font-size: 13px; font-style: italic; margin: 0; }
-.convo-chips { display: flex; gap: 8px; flex-wrap: wrap; padding: 12px 16px 0; }
+.convo-chips { display: flex; gap: 8px; flex-wrap: nowrap; overflow-x: auto; padding: 12px 16px 4px; }
+.convo-chips .chip { flex: none; }
 .convo-input { display: flex; gap: 8px; align-items: center; padding: 12px 14px; border-top: 1px solid var(--line); }
 .convo-input input { flex: 1; font: inherit; padding: 11px 14px; border: 1.5px solid var(--line); border-radius: 999px; min-width: 0; }
 .convo-input input:focus { outline: 2px solid var(--yellow); border-color: var(--yellow); }
@@ -418,6 +439,28 @@ label { font-weight: 600; font-size: 13px; }
 @keyframes figure-listen { 0%, 100% { transform: translateX(var(--lean-x, 0)) rotate(calc(var(--lean-r, 0deg) - 1deg)); } 50% { transform: translateX(var(--lean-x, 0)) rotate(calc(var(--lean-r, 0deg) + 0.7deg)) translateY(-1px); } }
 @keyframes board-in { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
 @keyframes convo-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+/* Subject/class picker inside the convo window: one collapsed row with
+   a small arrow. Tap it and the two dropdowns open; the chat stays
+   visible the rest of the time. */
+.convo-settings-toggle {
+  width: 100%; display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 16px; background: none; border: none; cursor: pointer;
+  font: inherit; font-weight: 700; font-size: 14px; color: var(--ink);
+}
+.convo-settings-arrow { color: var(--ink-soft); font-size: 13px; }
+
+@media (max-width: 900px) {
+  .convo-window { max-height: calc(100vh - 96px); max-height: calc(100dvh - 96px); bottom: 76px; }
+  .convo-log { min-height: 160px; }
+}
+
+/* Empty green board: shown on the Teacher page until a question puts a
+   diagram on it. */
+.board-empty-text {
+  font-family: var(--font-display); font-weight: 800;
+  font-size: clamp(20px, 3vw, 28px); line-height: 1.5;
+  color: #f5f5e8; text-align: center; margin: 0; padding: 40px 16px;
+}
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }

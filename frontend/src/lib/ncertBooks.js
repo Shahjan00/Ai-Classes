@@ -1,8 +1,10 @@
 // NCERT textbooks, Classes 9 to 12, English medium.
 // Official source: ncert.nic.in. Book list cross-checked against the official
 // textbook page (textbook.php) and chapter titles against official chapter PDFs.
-// Chapter PDFs live at https://ncert.nic.in/ncerts/l/{code}{NN}.pdf unless a
-// book uses the textbook/pdf/ path instead (the official site serves both).
+// Chapter PDFs live at https://ncert.nic.in/textbook/pdf/{code}{NN}.pdf.
+// The old https://ncert.nic.in/ncerts/l/ path is DEAD: it returns a blank page
+// with just the word ERROR (verified live in a browser, 16 Nov 2026), so every
+// book uses the textbook/pdf/ path now.
 //
 // verified: 'archive' means a Wayback capture confirmed the exact official URL
 // returned HTTP 200 on ncert.nic.in. 'linked' means a third-party page links
@@ -11,7 +13,7 @@
 // trusting it. bundled: true means the PDF is packed inside the app as base64
 // and opens in the in-app reader with no fetch at runtime.
 
-const L = 'https://ncert.nic.in/ncerts/l/';
+const L = 'https://ncert.nic.in/textbook/pdf/';
 const T = 'https://ncert.nic.in/textbook/pdf/';
 
 // chapters: [displayNo, fileNo, title, verified?, note?]

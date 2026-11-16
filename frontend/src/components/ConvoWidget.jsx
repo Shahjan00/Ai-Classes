@@ -1,7 +1,7 @@
 // Open convo — a small pill button fixed at the bottom-right of the
 // Teacher page. Tap it and a small floating chat window pops up with the
-// FULL chat experience: START talking, subject/class/language/voice
-// controls, chat bubbles, quick chips and the ask input. "Save chat"
+// FULL chat experience: subject/class picks, language/voice controls,
+// chat bubbles, quick chips and the ask input. "Save chat"
 // stores it on the user dashboard (localStorage, via store.js) so it
 // shows up under Saved chats. The controls live here, not on the main
 // teacher view, so the teacher page stays clean.
@@ -19,14 +19,17 @@ export const CHIPS = [
 
 export default function ConvoWidget(props) {
   const {
-    msgs, busy, continuous, listening,
+    msgs, busy,
     subject, onSubjectChange, cls, onClsChange,
     lang, onLangChange, speakOn, onSpeakToggle,
-    onMic, onSend, onSave, onClear, onStartTalking, onStopTalking,
+    onMic, onSend, onSave, onClear,
   } = props;
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState('');
   const [savedFlash, setSavedFlash] = useState(false);
+  // Subject and class stay collapsed behind one row, so the chat itself
+  // is visible as soon as the window opens. Tap the arrow to change them.
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const logRef = useRef(null);
 
   useEffect(() => {
@@ -71,51 +74,55 @@ export default function ConvoWidget(props) {
             </span>
           </div>
 
-          <div className="convo-talk">
-            {continuous ? (
-              <button type="button" className="btn btn-black" onClick={onStopTalking}>■ STOP</button>
-            ) : (
-              <button type="button" className="btn btn-yellow" onClick={onStartTalking}>▶ START talking</button>
+          <div className="convo-settings">
+            <button
+              type="button"
+              className="convo-settings-toggle"
+              aria-expanded={settingsOpen}
+              onClick={() => setSettingsOpen((v) => !v)}
+            >
+              <span>{subject} · {cls}</span>
+              <span className="convo-settings-arrow" aria-hidden="true">{settingsOpen ? '▴' : '▾'}</span>
+            </button>
+            {settingsOpen && (
+              <div className="convo-controls">
+                <label className="convo-field">
+                  <span>Subject</span>
+                  <select value={subject} onChange={(e) => onSubjectChange(e.target.value)}>
+                    {SUBJECTS.map((s) => <option key={s}>{s}</option>)}
+                  </select>
+                </label>
+                <label className="convo-field">
+                  <span>Class</span>
+                  <select value={cls} onChange={(e) => onClsChange(e.target.value)}>
+                    {CLASSES.map((c) => <option key={c}>{c}</option>)}
+                  </select>
+                </label>
+              </div>
             )}
-            <span className="convo-talk-hint">
-              {continuous ? (listening ? 'Listening — just speak.' : 'Thinking…') : 'Tap START, then just talk to your teacher. No typing needed.'}
-            </span>
-          </div>
-
-          <div className="convo-controls">
-            <label className="convo-field">
-              <span>Subject</span>
-              <select value={subject} onChange={(e) => onSubjectChange(e.target.value)}>
-                {SUBJECTS.map((s) => <option key={s}>{s}</option>)}
-              </select>
-            </label>
-            <label className="convo-field">
-              <span>Class</span>
-              <select value={cls} onChange={(e) => onClsChange(e.target.value)}>
-                {CLASSES.map((c) => <option key={c}>{c}</option>)}
-              </select>
-            </label>
-            <div className="convo-field">
-              <span>Language</span>
-              <span className="seg">
-                <button type="button" className={lang === 'en' ? 'on' : ''} onClick={() => onLangChange('en')}>English</button>
-                <button type="button" className={lang === 'hi' ? 'on' : ''} onClick={() => onLangChange('hi')}>हिन्दी</button>
-              </span>
-            </div>
-            <div className="convo-field">
-              <span>Voice</span>
-              <span className="convo-voice-row">
-                <button type="button" className={`btn btn-sm ${speakOn ? 'btn-black' : 'btn-ghost'}`} onClick={onSpeakToggle}>
-                  🔊 Voice {speakOn ? 'on' : 'off'}
-                </button>
-                <button type="button" className="btn btn-ghost btn-sm" onClick={onClear}>Clear chat</button>
-              </span>
+            <div className="convo-controls">
+              <div className="convo-field">
+                <span>Language</span>
+                <span className="seg">
+                  <button type="button" className={lang === 'en' ? 'on' : ''} onClick={() => onLangChange('en')}>English</button>
+                  <button type="button" className={lang === 'hi' ? 'on' : ''} onClick={() => onLangChange('hi')}>हिन्दी</button>
+                </span>
+              </div>
+              <div className="convo-field">
+                <span>Voice</span>
+                <span className="convo-voice-row">
+                  <button type="button" className={`btn btn-sm ${speakOn ? 'btn-black' : 'btn-ghost'}`} onClick={onSpeakToggle}>
+                    🔊 Voice {speakOn ? 'on' : 'off'}
+                  </button>
+                  <button type="button" className="btn btn-ghost btn-sm" onClick={onClear}>Clear chat</button>
+                </span>
+              </div>
             </div>
           </div>
 
           <div className="convo-log" ref={logRef}>
             {msgs.length === 0 && (
-              <p className="convo-empty">No messages yet. Ask your teacher anything, or tap START and just talk.</p>
+              <p className="convo-empty">No messages yet. Ask your teacher anything below.</p>
             )}
             {msgs.map((m, i) => (
               <div key={i} className={`convo-bubble ${m.role === 'user' ? 'user' : 'ai'}`}>
