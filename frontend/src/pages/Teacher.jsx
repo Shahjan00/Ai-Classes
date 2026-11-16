@@ -1,12 +1,15 @@
-// AI Teacher — the core page. One green board: when a question needs a
-// diagram it draws on the board; until then the board waits empty.
+// AI Teacher — the core page. One classroom window: the 3D teacher and
+// the green board share the same scene. She stands left of centre in
+// front of the board; when a question needs a diagram she steps aside
+// and points at it while she explains. There is no teacher switcher and
+// no mouse control: she is the only teacher, and the camera never moves.
 // START / STOP for continuous talking, an ask box below, and the full
 // chat experience (controls, bubbles, chips, Save chat) lives in the
 // Open convo floating window, so the teacher page stays clean.
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import GreenBoard from '../components/GreenBoard';
 import ConvoWidget from '../components/ConvoWidget';
+import ClassroomScene from '../components/ClassroomScene';
 import FaceIdPanel from '../components/FaceIdPanel';
 import { matchBoardTopic, genericBoardSpec } from '../lib/boardTopics';
 import { stripMarkdown } from '../lib/md';
@@ -59,6 +62,10 @@ export default function Teacher() {
   const [continuous, setContinuous] = useState(false);
   const [layout, setLayout] = useState('center');
   const [boardTopic, setBoardTopic] = useState(null);
+  // Word index the teacher is speaking right now, for her lip sync.
+  // Driven by real speechSynthesis boundary events; the viewer falls back
+  // to estimated timing when those events never fire.
+  const [spokenWordIndex, setSpokenWordIndex] = useState(-1);
   const latestQRef = useRef('');
   const abortRef = useRef(null);
 
@@ -131,6 +138,7 @@ export default function Teacher() {
     stopSpeaking();
     setAvatarState('idle');
     setCaption('');
+    setSpokenWordIndex(-1);
   };
 
   // Speak an answer aloud. The board is a diagram only, so there is no
@@ -149,6 +157,7 @@ export default function Teacher() {
     const finish = () => {
       if (ended) return;
       ended = true;
+      setSpokenWordIndex(-1);
       setAvatarState('happy');
       setTimeout(() => setAvatarState((a) => (a === 'happy' ? 'idle' : a)), 4000);
       if (continuousRef.current) setTimeout(() => { if (continuousRef.current) startListeningLoop(); }, 500);
@@ -156,7 +165,12 @@ export default function Teacher() {
     speak(
       plain,
       lang,
-      null,
+      (charIndex) => {
+        // speechSynthesis gives a character offset; the teacher's mouth
+        // needs a word index, so count the words before that offset.
+        const idx = plain.slice(0, charIndex).split(/\s+/).filter(Boolean).length;
+        setSpokenWordIndex(idx);
+      },
       finish,
     );
     // Safety net: headless browsers or missing voices may never fire onend.
@@ -277,21 +291,18 @@ export default function Teacher() {
         <h1 className="display display-md teacher-title">Ask. Listen. Learn.</h1>
         <p className="teacher-tagline">Ask anything, learn anything.</p>
 
-        {/* The board is the classroom now: no 3D teacher, no robot, and
-            nothing that follows the mouse. A diagram draws here when a
-            question needs one; until then the board waits empty. */}
         <div className={`teacher-area ${boardMode ? 'board-mode' : ''}`}>
-          {boardTopic ? (
-            <GreenBoard topic={boardTopic} />
-          ) : (
-            <div className="board board-empty" role="img" aria-label="Empty green board">
-              <div className="board-inner">
-                <p className="board-empty-text">Ask me anything.<br />Your lesson will appear here on the board.</p>
-              </div>
-            </div>
-          )}
+          <div className="classroom-wrap">
+            <ClassroomScene
+              speaking={avatar === 'speaking'}
+              listening={listening}
+              spokenText={caption}
+              wordIndex={spokenWordIndex}
+              boardTopic={boardTopic}
+            />
+            <p className="stage-status">{STATUS[avatar] || STATUS.idle}</p>
+          </div>
         </div>
-        <p className="stage-status">{STATUS[avatar] || STATUS.idle}</p>
 
         {/* Short spoken answer, plain text only — no card, no overlay. */}
         {caption && <p className="teacher-caption">{caption}</p>}

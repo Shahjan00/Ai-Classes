@@ -6,8 +6,8 @@
 // The user rejected the old presentation for three real reasons, and
 // each one is fixed here on purpose:
 //   1. She spun 360 like a product viewer. There is NO auto-rotation
-//      anywhere in this file. The camera is fixed; dragging only orbits
-//      while the user drags, and it never spins on its own.
+//      anywhere in this file, and NO mouse control either: the camera is
+//      fixed, nothing orbits, nothing pans, dragging does nothing.
 //   2. Her arms stuck out in the default A-pose. Ready Player Me
 //      avatars load that way, so after load every arm bone is rotated
 //      in world space until the arms hang relaxed at her sides (see
@@ -48,7 +48,6 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { drawBoard, BOARD_W, BOARD_H } from '../lib/boardCanvas';
 
 // Base64 -> bytes, in chunks so a 6.3 MB string never blows the stack.
@@ -249,7 +248,6 @@ export default function ClassroomScene({
   useEffect(() => {
     let cancelled = false;
     let renderer = null;
-    let controls = null;
     let raf = 0;
     let ro = null;
     let scene = null;
@@ -284,11 +282,12 @@ export default function ClassroomScene({
         scene = new THREE.Scene();
         scene.background = new THREE.Color(0xf6f1e6);
 
-        // Fixed camera. It never moves on its own: no auto-rotation,
-        // no idle drift, no turntable. Dragging orbits while the user
-        // drags, and only while the user drags.
+        // Fixed camera. It never moves on its own and the mouse cannot
+        // move it either: no auto-rotation, no orbit, no pan, no drag.
+        // It looks at the classroom once and stays there.
         const camera = new THREE.PerspectiveCamera(38, width / h, 0.1, 100);
         camera.position.set(CAMERA_POS.x, CAMERA_POS.y, CAMERA_POS.z);
+        camera.lookAt(CAMERA_TARGET.x, CAMERA_TARGET.y, CAMERA_TARGET.z);
 
         scene.add(new THREE.HemisphereLight(0xffffff, 0xe8e2d5, 0.9));
         const key = new THREE.DirectionalLight(0xfff6e0, 2.2);
@@ -367,18 +366,6 @@ export default function ClassroomScene({
             boardTex.needsUpdate = true;
           },
         };
-
-        controls = new OrbitControls(camera, renderer.domElement);
-        controls.target.set(CAMERA_TARGET.x, CAMERA_TARGET.y, CAMERA_TARGET.z);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.08;
-        controls.autoRotate = false;
-        controls.minDistance = 2.8;
-        controls.maxDistance = 7;
-        controls.minPolarAngle = Math.PI * 0.25;
-        controls.maxPolarAngle = Math.PI * 0.55;
-        controls.enablePan = false;
-        controls.update();
 
         setStatusText('Bringing your teacher into the room…');
         const loader = new GLTFLoader();
@@ -686,7 +673,7 @@ export default function ClassroomScene({
             boardType: diagram.type || null,
             boardLabels: (diagram.labels || []).slice(),
             boardEquation: boardTopicRef.current ? boardTopicRef.current.equation || null : null,
-            cameraAzimuth: Math.round(controls.getAzimuthalAngle() * 1000) / 1000,
+            cameraAzimuth: 0,
             teacherX: Math.round(teacherGroup.position.x * 100) / 100,
             bodyTurn: Math.round(move.turn * 100) / 100,
             gesture: Math.round(move.gestureWeight * 100) / 100,
@@ -695,7 +682,6 @@ export default function ClassroomScene({
             bones: Object.keys(bones).sort(),
           };
 
-          controls.update();
           renderer.render(scene, camera);
         };
         animate();
@@ -726,7 +712,6 @@ export default function ClassroomScene({
       cancelled = true;
       cancelAnimationFrame(raf);
       if (ro) ro.disconnect();
-      if (controls) controls.dispose();
       boardApiRef.current = null;
       if (scene) {
         scene.traverse((obj) => {
@@ -777,7 +762,7 @@ export default function ClassroomScene({
         )}
       </div>
       <p className="classroom-note">
-        She is a 3D teacher, not a video. Her mouth moves with every word she speaks, and she points at the board while she explains. Drag to look around.
+        She is a 3D teacher, not a video. Her mouth moves with every word she speaks, and she points at the board while she explains.
       </p>
     </div>
   );
