@@ -1,15 +1,21 @@
 // Face ID: on-device face enrollment and recognition for the AI Teacher.
 // Everything runs in the browser. face-api.js loads lazily from a CDN,
-// the recognition models load from the same CDN, and the enrolled face
-// descriptor lives only in this browser's localStorage under
-// 'jarvish:faceId'. Nothing is uploaded to any server, ever.
+// the recognition models load from the same CDN, and the enrolled faces
+// live only in this browser's localStorage under 'jarvish:faceStudents'.
+// Nothing is uploaded to any server, ever.
 // A match is a Euclidean distance under 0.6 between face descriptors.
+//
+// The whole class can be registered, not just one student. Each student
+// has a name, one display photo, and as many descriptors as they
+// captured: registering the same face from a few angles makes
+// recognition much more reliable, so registration takes several photos.
 const SCRIPT_URLS = [
   'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js',
   'https://unpkg.com/face-api.js@0.22.2/dist/face-api.min.js',
 ];
 const WEIGHTS_URL = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights';
-const STORAGE_KEY = 'jarvish:faceId';
+const STUDENTS_KEY = 'jarvish:faceStudents';
+const LEGACY_KEY = 'jarvish:faceId';
 export const FACE_MATCH_THRESHOLD = 0.6;
 
 let faceApiPromise = null;
@@ -82,7 +88,6 @@ export function stopCamera(stream) {
 
 // Find the one face in the video frame and return its descriptor
 // (a 128-number face fingerprint), or null when no face is visible.
-// Throws when more than one face is in the frame.
 export async function detectFaceDescriptor(faceapi, videoEl) {
   const detection = await faceapi
     .detectSingleFace(videoEl, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 }))
@@ -90,6 +95,22 @@ export async function detectFaceDescriptor(faceapi, videoEl) {
     .withFaceDescriptor();
   if (!detection) return null;
   return detection.descriptor;
+}
+
+// Snap a small square photo of the current video frame, for the
+// student's display picture. Mirrored like the preview.
+export function capturePhoto(videoEl, size = 96) {
+  const canvas = document.createElement('canvas');
+  const w = videoEl.videoWidth || 640;
+  const h = videoEl.videoHeight || 480;
+  const side = Math.min(w, h);
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  ctx.translate(size, 0);
+  ctx.scale(-1, 1);
+  ctx.drawImage(videoEl, (w - side) / 2, (h - side) / 2, side, side, 0, 0, size, size);
+  return canvas.toDataURL('image/jpeg', 0.7);
 }
 
 export function euclideanDistance(a, b) {
@@ -101,45 +122,97 @@ export function euclideanDistance(a, b) {
   return Math.sqrt(sum);
 }
 
-export function getEnrollment() {
+function validStudent(s) {
+  return s && typeof s.name === 'string' && s.name.trim()
+    && Array.isArray(s.descriptors) && s.descriptors.length > 0
+    && s.descriptors.every((d) => Array.isArray(d) && d.length === 128);
+}
+
+// The whole registered class. Each student: { id, name, photo, descriptors, when }.
+// photo is one small JPEG data URL (the first photo they captured); a
+// student registered before photos existed has photo: null.
+export function getStudents() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const data = JSON.parse(raw);
-    if (!data || !data.name || !Array.isArray(data.descriptor) || data.descriptor.length !== 128) return null;
-    return data;
+    const raw = localStorage.getItem(STUDENTS_KEY);
+    let list = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(list)) list = [];
+    list = list.filter(validStudent);
+    // One-time move from the old single-student storage, if it exists.
+    if (list.length === 0) {
+      const legacyRaw = localStorage.getItem(LEGACY_KEY);
+      if (legacyRaw) {
+        try {
+          const legacy = JSON.parse(legacyRaw);
+          if (legacy && legacy.name && Array.isArray(legacy.descriptor) && legacy.descriptor.length === 128) {
+            list = [{
+              id: 'legacy-' + Date.now(),
+              name: legacy.name,
+              photo: null,
+              descriptors: [legacy.descriptor],
+              when: legacy.when || new Date().toISOString(),
+            }];
+            saveStudents(list);
+          }
+        } catch { /* ignore a broken legacy entry */ }
+        try { localStorage.removeItem(LEGACY_KEY); } catch { /* ignore */ }
+      }
+    }
+    return list;
   } catch {
-    return null;
+    return [];
   }
 }
 
-export function clearEnrollment() {
-  try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+export function saveStudents(list) {
+  try {
+    localStorage.setItem(STUDENTS_KEY, JSON.stringify(list));
+  } catch {
+    throw new Error('Could not save faces on this device. Check your browser storage settings.');
+  }
 }
 
-// Save this face under a name. The descriptor is the only thing stored.
-export function enroll(name, descriptor) {
+// Save a new student with all the photos they captured this session.
+// descriptors is an array of 128-number arrays; photo is one data URL.
+export function addStudent({ name, photo, descriptors }) {
   const clean = (name || '').trim();
   if (!clean) throw new Error('Type your name first, then register your face.');
-  if (!descriptor) throw new Error('No face in the frame. Look at the camera and try again.');
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ name: clean, descriptor: Array.from(descriptor), when: new Date().toISOString() }));
-  } catch {
-    throw new Error('Could not save your face on this device. Check your browser storage settings.');
-  }
-  return clean;
+  if (!descriptors || descriptors.length === 0) throw new Error('No face in the frame. Look at the camera and try again.');
+  const list = getStudents();
+  const student = {
+    id: 'stu-' + Date.now() + '-' + Math.floor(Math.random() * 10000),
+    name: clean,
+    photo: photo || null,
+    descriptors: descriptors.map((d) => Array.from(d)),
+    when: new Date().toISOString(),
+  };
+  list.push(student);
+  saveStudents(list);
+  return student;
 }
 
-// Compare the face in the frame with the enrolled one.
-// Returns { match, name, distance }. match is false when nobody is
-// enrolled, no face is visible, or the face does not match.
-export function recognize(descriptor) {
-  const enrolled = getEnrollment();
-  if (!enrolled) return { match: false, name: null, distance: null, reason: 'no-enrollment' };
-  if (!descriptor) return { match: false, name: null, distance: null, reason: 'no-face' };
-  const distance = euclideanDistance(descriptor, enrolled.descriptor);
-  if (distance < FACE_MATCH_THRESHOLD) {
-    return { match: true, name: enrolled.name, distance, reason: 'match' };
+export function removeStudent(id) {
+  saveStudents(getStudents().filter((s) => s.id !== id));
+}
+
+// Compare the face in the frame with every registered student, across
+// every photo each of them captured. Returns the closest match:
+// { match, name, studentId, distance }. match is false when nobody is
+// registered, no face is visible, or the face does not match anyone.
+export function recognizeStudent(descriptor) {
+  const students = getStudents();
+  if (students.length === 0) return { match: false, name: null, studentId: null, distance: null, reason: 'no-enrollment' };
+  if (!descriptor) return { match: false, name: null, studentId: null, distance: null, reason: 'no-face' };
+  let best = null;
+  for (const student of students) {
+    for (const known of student.descriptors) {
+      const distance = euclideanDistance(descriptor, known);
+      if (!best || distance < best.distance) {
+        best = { name: student.name, studentId: student.id, distance };
+      }
+    }
   }
-  return { match: false, name: null, distance, reason: 'no-match' };
+  if (best && best.distance < FACE_MATCH_THRESHOLD) {
+    return { match: true, name: best.name, studentId: best.studentId, distance: best.distance, reason: 'match' };
+  }
+  return { match: false, name: null, studentId: null, distance: best ? best.distance : null, reason: 'no-match' };
 }
