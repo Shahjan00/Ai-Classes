@@ -19,7 +19,10 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 MODEL = "openai/gpt-oss-20b"
-VISION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
+VISION_MODELS = [
+    "meta-llama/llama-4-scout-17b-16e-instruct",
+    "meta-llama/llama-4-maverick-17b-128e-instruct",
+]
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 SYSTEM_PROMPT = (
@@ -504,19 +507,13 @@ async def board(req: BoardRequest):
     return {"board": demo_board_spec(req.question)}
 
 
-@app.post("/api/vision")
-async def vision(req: VisionRequest):
-    """Answer a question about a webcam photo. Live mode uses Groq's
-    vision model; demo mode returns a short placeholder answer."""
-    if not groq_key():
-        return {"answer": "I can see your camera is on, but I need the live teacher backend to describe what I see. Set GROQ_API_KEY and ask me again."}
-    image_url = req.image if req.image.startswith("data:") else "data:image/jpeg;base64," + req.image
+async def groq_vision_answer(image_url: str, question: str, model: str) -> str:
     payload = {
-        "model": VISION_MODEL,
+        "model": model,
         "messages": [
             {"role": "system", "content": VISION_SYSTEM_PROMPT},
             {"role": "user", "content": [
-                {"type": "text", "text": req.question},
+                {"type": "text", "text": question},
                 {"type": "image_url", "image_url": {"url": image_url}},
             ]},
         ],
@@ -527,13 +524,31 @@ async def vision(req: VisionRequest):
         "Authorization": f"Bearer {groq_key()}",
         "Content-Type": "application/json",
     }
-    try:
-        async with httpx.AsyncClient(timeout=60) as client:
-            resp = await client.post(GROQ_URL, json=payload, headers=headers)
-            resp.raise_for_status()
-            return {"answer": resp.json()["choices"][0]["message"]["content"].strip()}
-    except Exception:
-        return {"answer": "I could not see the photo clearly. Try again with more light on your face."}
+    async with httpx.AsyncClient(timeout=60) as client:
+        resp = await client.post(GROQ_URL, json=payload, headers=headers)
+        resp.raise_for_status()
+        return resp.json()["choices"][0]["message"]["content"].strip()
+
+
+@app.post("/api/vision")
+async def vision(req: VisionRequest):
+    """Answer a question about a webcam photo. Live mode uses Groq's
+    vision models, Scout first then Maverick as a fallback; demo mode
+    returns a short placeholder answer."""
+    if not groq_key():
+        return {"answer": "I can see your camera is on, but I need the live teacher backend to describe what I see. Set GROQ_API_KEY and ask me again."}
+    image_url = req.image if req.image.startswith("data:") else "data:image/jpeg;base64," + req.image
+    last_error = None
+    for model in VISION_MODELS:
+        try:
+            answer = await groq_vision_answer(image_url, req.question, model)
+            if answer:
+                return {"answer": answer}
+        except Exception as e:
+            last_error = e
+            print("vision failed for", model, ":", e)
+    print("vision: all models failed, last error:", last_error)
+    return {"answer": "I could not see the photo clearly. Try again with more light on your face."}
 
 
 @app.post("/api/notes")
