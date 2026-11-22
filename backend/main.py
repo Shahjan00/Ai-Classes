@@ -19,6 +19,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 MODEL = "openai/gpt-oss-20b"
+VISION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 SYSTEM_PROMPT = (
@@ -64,6 +65,20 @@ class BoardRequest(BaseModel):
     subject: str | None = None
     cls: str | None = None
     lang: str = "en"
+
+
+class VisionRequest(BaseModel):
+    image: str
+    question: str
+    lang: str = "en"
+
+
+VISION_SYSTEM_PROMPT = (
+    "You are JARVISH, a friendly AI teacher. Look at the photo from the "
+    "student's webcam and answer the question about what you see. Keep it "
+    "SHORT: at most 2 short sentences, plain simple words. Answer only what "
+    "you can clearly see. If you cannot see it, say so honestly."
+)
 
 
 # ---------------------------------------------------------------- board specs
@@ -487,6 +502,38 @@ async def board(req: BoardRequest):
         except Exception:
             return {"board": demo_board_spec(req.question)}
     return {"board": demo_board_spec(req.question)}
+
+
+@app.post("/api/vision")
+async def vision(req: VisionRequest):
+    """Answer a question about a webcam photo. Live mode uses Groq's
+    vision model; demo mode returns a short placeholder answer."""
+    if not groq_key():
+        return {"answer": "I can see your camera is on, but I need the live teacher backend to describe what I see. Set GROQ_API_KEY and ask me again."}
+    image_url = req.image if req.image.startswith("data:") else "data:image/jpeg;base64," + req.image
+    payload = {
+        "model": VISION_MODEL,
+        "messages": [
+            {"role": "system", "content": VISION_SYSTEM_PROMPT},
+            {"role": "user", "content": [
+                {"type": "text", "text": req.question},
+                {"type": "image_url", "image_url": {"url": image_url}},
+            ]},
+        ],
+        "temperature": 0.5,
+        "max_tokens": 200,
+    }
+    headers = {
+        "Authorization": f"Bearer {groq_key()}",
+        "Content-Type": "application/json",
+    }
+    try:
+        async with httpx.AsyncClient(timeout=60) as client:
+            resp = await client.post(GROQ_URL, json=payload, headers=headers)
+            resp.raise_for_status()
+            return {"answer": resp.json()["choices"][0]["message"]["content"].strip()}
+    except Exception:
+        return {"answer": "I could not see the photo clearly. Try again with more light on your face."}
 
 
 @app.post("/api/notes")
