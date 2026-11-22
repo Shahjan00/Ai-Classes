@@ -71,6 +71,8 @@ export default function Teacher() {
   const continuousRef = useRef(false);
   const captionRef = useRef('');
   const listenStopRef = useRef(null);
+  const lastGreetRef = useRef({ name: null, at: 0 });
+  const knownNameRef = useRef(null);
 
   useEffect(() => { avatarRef.current = avatar; }, [avatar]);
   useEffect(() => { busyRef.current = busy; }, [busy]);
@@ -229,8 +231,12 @@ export default function Teacher() {
     setBusy(true);
     setAvatarState('thinking');
     let full = '';
+    const chatMessages = history.map((m) => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.text }));
+    if (knownNameRef.current) {
+      chatMessages.unshift({ role: 'system', content: `The student you are talking to is named ${knownNameRef.current}. If they ask their name, tell them. Use their name naturally.` });
+    }
     abortRef.current = streamChat(
-      { messages: history.map((m) => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.text })), subject, cls, lang },
+      { messages: chatMessages, subject, cls, lang },
       (tok) => {
         full += tok;
         setMsgs((prev) => {
@@ -281,6 +287,11 @@ export default function Teacher() {
   // Face ID recognised the student: greet them by name, out loud and
   // in the chat, then carry on with the normal talk loop.
   const greetStudent = (studentName) => {
+    const now = Date.now();
+    const last = lastGreetRef.current;
+    if (last.name === studentName && now - last.at < 60000) return;
+    lastGreetRef.current = { name: studentName, at: now };
+    knownNameRef.current = studentName;
     const greeting = `Hi ${studentName}, what can I help you with?`;
     setMsgs((prev) => [...prev, { role: 'ai', text: greeting }]);
     speakAnswer(greeting);
