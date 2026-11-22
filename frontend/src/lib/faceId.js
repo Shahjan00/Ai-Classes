@@ -19,6 +19,23 @@ const LEGACY_KEY = 'jarvish:faceId';
 export const FACE_MATCH_THRESHOLD = 0.6;
 
 let faceApiPromise = null;
+let activeVideoEl = null;
+
+export function getActiveVideo() {
+  return activeVideoEl;
+}
+
+export function captureFrame(maxWidth = 640) {
+  const el = activeVideoEl;
+  if (!el || !el.videoWidth) return null;
+  const canvas = document.createElement('canvas');
+  const scale = Math.min(1, maxWidth / el.videoWidth);
+  canvas.width = Math.round(el.videoWidth * scale);
+  canvas.height = Math.round(el.videoHeight * scale);
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(el, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL('image/jpeg', 0.8);
+}
 
 function loadScript(src) {
   return new Promise((resolve, reject) => {
@@ -78,12 +95,14 @@ export async function startCamera(videoEl) {
   }
   videoEl.srcObject = stream;
   await videoEl.play();
+  activeVideoEl = videoEl;
   return stream;
 }
 
 export function stopCamera(stream) {
   if (!stream) return;
   stream.getTracks().forEach((t) => t.stop());
+  activeVideoEl = null;
 }
 
 // Find the one face in the video frame and return its descriptor

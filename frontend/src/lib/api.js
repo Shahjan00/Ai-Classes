@@ -77,3 +77,14 @@ export async function getNotes({ subject, chapter, cls, lang }) {
   if (!r.ok) throw new Error('notes failed');
   return await r.json();
 }
+
+// Ask about a webcam photo. Returns { answer }.
+export async function askVision({ image, question, lang }) {
+  const r = await fetch(BASE + '/api/vision', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ image, question, lang: lang || 'en' }),
+  });
+  if (!r.ok) throw new Error('vision failed');
+  return await r.json();
+}

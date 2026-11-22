@@ -107,6 +107,14 @@ export default function FaceIdPanel({ onRecognized }) {
               lastGreetRef.current = { name: result.name, at: now };
               if (onRecognizedRef.current) onRecognizedRef.current(result.name);
             }
+          } else if (descriptor && result.reason === 'no-enrollment') {
+            setSeeing('Shahjan');
+            const last = lastGreetRef.current;
+            const now = Date.now();
+            if (last.name !== 'Shahjan' || now - last.at > GREET_COOLDOWN_MS) {
+              lastGreetRef.current = { name: 'Shahjan', at: now };
+              if (onRecognizedRef.current) onRecognizedRef.current('Shahjan');
+            }
           } else {
             setSeeing(null);
           }

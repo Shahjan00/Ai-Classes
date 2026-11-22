@@ -4,7 +4,8 @@ import ConvoWidget from '../components/ConvoWidget';
 import PhotoTeacher from '../components/PhotoTeacher';
 import FaceIdPanel from '../components/FaceIdPanel';
 import { stripMarkdown } from '../lib/md';
-import { streamChat } from '../lib/api';
+import { streamChat, askVision } from '../lib/api';
+import { captureFrame, getActiveVideo } from '../lib/faceId';
 import {
   speak, stopSpeaking, listenOnce, startContinuousListening,
   speechSupported, recognitionSupported,
@@ -24,6 +25,13 @@ const WELCOME = {
   role: 'ai',
   text: 'Hi! I am JARVISH, your AI teacher. Ask me anything, a school question, general knowledge, coding or writing, and I will give you a clear answer. Just speak, or type below.',
 };
+
+function isVisualQuestion(q) {
+  const text = (q || '').toLowerCase();
+  if (/(shirt|colour|color|wearing|outfit|glasses|webcam|camera|background)/.test(text)) return true;
+  if (/(what am i|am i wearing|do i look|can you see|what do you see|look at me|see me|behind me|my face|my hair|what colour|what color)/.test(text)) return true;
+  return false;
+}
 
 export default function Teacher() {
   const toast = useToast();
@@ -174,6 +182,47 @@ export default function Teacher() {
     stopSpeaking();
     stopListeningLoop();
     setCaption('');
+    if (isVisualQuestion(q)) {
+      const videoEl = getActiveVideo();
+      if (!videoEl || !videoEl.videoWidth) {
+        const note = 'Turn on the class camera first, then ask me. I need to see you to answer that.';
+        setMsgs((prev) => [...prev, { role: 'user', text: q }, { role: 'ai', text: note }]);
+        setInput('');
+        speakAnswer(note);
+        return;
+      }
+      const frame = captureFrame();
+      if (!frame) {
+        const note = 'I could not see the camera frame. Try again.';
+        setMsgs((prev) => [...prev, { role: 'user', text: q }, { role: 'ai', text: note }]);
+        setInput('');
+        speakAnswer(note);
+        return;
+      }
+      const vhistory = [...msgs.filter((m) => m.role !== 'ai' || m.text !== WELCOME.text), { role: 'user', text: q }];
+      setMsgs([...vhistory, { role: 'ai', text: '' }]);
+      setInput('');
+      setBusy(true);
+      setAvatarState('thinking');
+      askVision({ image: frame, question: q, lang })
+        .then((d) => {
+          const answer = (d && d.answer ? String(d.answer) : '').trim() || 'I could not see that clearly.';
+          setMsgs((prev) => {
+            const next = [...prev];
+            next[next.length - 1] = { role: 'ai', text: answer };
+            return next;
+          });
+          setBusy(false);
+          speakAnswer(answer);
+        })
+        .catch(() => {
+          setBusy(false);
+          setAvatarState('idle');
+          toast('Could not reach the teacher backend. Is it running?');
+          if (continuousRef.current) setTimeout(startListeningLoop, 500);
+        });
+      return;
+    }
     const history = [...msgs.filter((m) => m.role !== 'ai' || m.text !== WELCOME.text), { role: 'user', text: q }];
     setMsgs([...history, { role: 'ai', text: '' }]);
     setInput('');
@@ -232,7 +281,7 @@ export default function Teacher() {
   // Face ID recognised the student: greet them by name, out loud and
   // in the chat, then carry on with the normal talk loop.
   const greetStudent = (studentName) => {
-    const greeting = `Hi ${studentName}! Great to see you. What should we learn today?`;
+    const greeting = `Hi ${studentName}, what can I help you with?`;
     setMsgs((prev) => [...prev, { role: 'ai', text: greeting }]);
     speakAnswer(greeting);
   };
