@@ -480,10 +480,11 @@ label { font-weight: 600; font-size: 13px; }
 .photo-teacher { display: flex; justify-content: center; }
 .photo-teacher img { display: block; width: min(420px, 90vw); height: auto; max-height: 560px; object-fit: cover; border-radius: 24px; border: 1.5px solid var(--line); box-shadow: 0 18px 44px rgba(17, 17, 16, 0.12); }
 .photo-teacher.idle img { animation: photo-breathe 5s ease-in-out infinite; }
-.photo-teacher.speaking img { animation: photo-nod 1s ease-in-out infinite; }
+.photo-teacher.speaking img { animation: photo-nod 2.4s ease-in-out infinite; }
+.photo-teacher.question { transform: rotate(1.5deg); transition: transform 0.4s ease; }
 .photo-teacher.listening img { animation: photo-breathe 5s ease-in-out infinite; }
 @keyframes photo-breathe { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-4px) scale(1.005); } }
-@keyframes photo-nod { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-3px) rotate(0.4deg); } }
+@keyframes photo-nod { 0%, 100% { transform: translateY(0) rotate(0deg); } 15% { transform: translateY(-3px) rotate(0.4deg); } 30% { transform: translateY(0) rotate(0deg); } 55% { transform: translateY(-2px) rotate(-0.3deg); } 70% { transform: translateY(0) rotate(0deg); } }
 .classroom-overlay {
   position: absolute; inset: 0; display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: 12px; text-align: center;

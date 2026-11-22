@@ -53,6 +53,7 @@ export default function Teacher() {
   const [continuous, setContinuous] = useState(false);
   const [spokenWordIndex, setSpokenWordIndex] = useState(-1);
   const [spokenWord, setSpokenWord] = useState('');
+  const [isQuestion, setIsQuestion] = useState(false);
   const abortRef = useRef(null);
 
   // Refs so timers and speech callbacks always see fresh values.
@@ -124,6 +125,7 @@ export default function Teacher() {
     setCaption('');
     setSpokenWordIndex(-1);
     setSpokenWord('');
+    setIsQuestion(false);
   };
 
   const speakAnswer = (text) => {
@@ -142,6 +144,7 @@ export default function Teacher() {
       ended = true;
       setSpokenWordIndex(-1);
       setSpokenWord('');
+      setIsQuestion(false);
       setAvatarState('happy');
       setTimeout(() => setAvatarState((a) => (a === 'happy' ? 'idle' : a)), 4000);
       if (continuousRef.current) setTimeout(() => { if (continuousRef.current) startListeningLoop(); }, 500);
@@ -154,6 +157,9 @@ export default function Teacher() {
         const idx = plain.slice(0, charIndex).split(/\s+/).filter(Boolean).length;
         setSpokenWordIndex(idx);
         setSpokenWord(words[idx] || '');
+        const rest = plain.slice(charIndex);
+        const m = rest.match(/[.!?]/);
+        setIsQuestion(!!m && m[0] === '?');
       },
       finish,
     );
@@ -240,7 +246,7 @@ export default function Teacher() {
 
         <div className="teacher-area">
           <div className="photo-teacher-wrap">
-            <PhotoTeacher speaking={avatar === 'speaking'} listening={listening} wordIndex={spokenWordIndex} word={spokenWord} />
+            <PhotoTeacher speaking={avatar === 'speaking'} listening={listening} wordIndex={spokenWordIndex} word={spokenWord} isQuestion={isQuestion} />
             <p className="stage-status">{STATUS[avatar] || STATUS.idle}</p>
           </div>
         </div>
