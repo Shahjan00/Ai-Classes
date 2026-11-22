@@ -24,7 +24,7 @@ export default function ConvoWidget(props) {
     lang, onLangChange, speakOn, onSpeakToggle,
     onMic, onSend, onSave, onClear,
   } = props;
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const [draft, setDraft] = useState('');
   const [savedFlash, setSavedFlash] = useState(false);
   // Subject and class stay collapsed behind one row, so the chat itself

@@ -15,6 +15,10 @@ export function recognitionSupported() {
 export function pickVoice(lang) {
   const voices = window.speechSynthesis.getVoices();
   if (!voices.length) return null;
+  if (lang !== 'hi') {
+    const google = voices.find((x) => x.lang === 'en-US' && x.name.toLowerCase().includes('google'));
+    if (google) return google;
+  }
   const want = lang === 'hi' ? ['hi-IN', 'hi'] : ['en-IN', 'en-GB', 'en-US', 'en'];
   for (const code of want) {
     const v = voices.find((x) => x.lang === code);
@@ -36,7 +40,7 @@ export function speak(text, lang, onBoundary, onEnd) {
   u.lang = lang === 'hi' ? 'hi-IN' : 'en-IN';
   const voice = pickVoice(lang);
   if (voice) u.voice = voice;
-  u.rate = 1.0;
+  u.rate = 0.95;
   u.onboundary = (e) => { if (e.name === 'word' && onBoundary) onBoundary(e.charIndex || 0); };
   u.onend = () => onEnd && onEnd();
   u.onerror = () => onEnd && onEnd();
