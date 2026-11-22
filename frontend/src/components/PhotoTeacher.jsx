@@ -1,9 +1,21 @@
 import { useEffect, useRef, useState } from 'react';
 import { TEACHER_PHOTO } from '../lib/teacherPhoto';
-import { TEACHER_MOUTH_OPEN, TEACHER_BLINK } from '../lib/teacherFrames';
+import { TEACHER_MOUTH_OPEN, TEACHER_MOUTH_SLIGHT, TEACHER_MOUTH_WIDE, TEACHER_MOUTH_O, TEACHER_BLINK } from '../lib/teacherFrames';
 
-export default function PhotoTeacher({ speaking = false, listening = false, wordIndex = -1 }) {
-  const [mouthOpen, setMouthOpen] = useState(false);
+const FRAMES = [TEACHER_MOUTH_SLIGHT, TEACHER_MOUTH_OPEN, TEACHER_MOUTH_WIDE, TEACHER_MOUTH_O];
+
+function mouthFor(word) {
+  const w = (word || '').toLowerCase();
+  if (w.length <= 2) return TEACHER_MOUTH_SLIGHT;
+  const m = w.match(/[aeiou]/);
+  if (!m) return TEACHER_MOUTH_SLIGHT;
+  if (m[0] === 'o' || m[0] === 'u') return TEACHER_MOUTH_O;
+  if (m[0] === 'a') return TEACHER_MOUTH_WIDE;
+  return TEACHER_MOUTH_OPEN;
+}
+
+export default function PhotoTeacher({ speaking = false, listening = false, wordIndex = -1, word = '' }) {
+  const [mouth, setMouth] = useState(null);
   const [blinking, setBlinking] = useState(false);
   const lastBoundaryRef = useRef(0);
   const closeRef = useRef(null);
@@ -11,19 +23,23 @@ export default function PhotoTeacher({ speaking = false, listening = false, word
   useEffect(() => {
     if (!speaking || wordIndex < 0) return;
     lastBoundaryRef.current = Date.now();
-    setMouthOpen(true);
+    setMouth(mouthFor(word));
     if (closeRef.current) clearTimeout(closeRef.current);
-    closeRef.current = setTimeout(() => setMouthOpen(false), 200);
+    const hold = Math.min(450, 150 + (word || '').length * 25);
+    closeRef.current = setTimeout(() => setMouth(null), hold);
     return () => clearTimeout(closeRef.current);
-  }, [wordIndex, speaking]);
+  }, [wordIndex, speaking, word]);
 
   useEffect(() => {
     if (!speaking) {
-      setMouthOpen(false);
+      setMouth(null);
       return;
     }
     const id = setInterval(() => {
-      if (Date.now() - lastBoundaryRef.current > 800) setMouthOpen((v) => !v);
+      if (Date.now() - lastBoundaryRef.current > 800) {
+        setMouth(FRAMES[Math.floor(Math.random() * FRAMES.length)]);
+        setTimeout(() => setMouth(null), 220);
+      }
     }, 380);
     return () => clearInterval(id);
   }, [speaking]);
@@ -44,7 +60,7 @@ export default function PhotoTeacher({ speaking = false, listening = false, word
     return () => { alive = false; clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
-  const frame = blinking ? TEACHER_BLINK : mouthOpen && speaking ? TEACHER_MOUTH_OPEN : TEACHER_PHOTO;
+  const frame = blinking ? TEACHER_BLINK : mouth && speaking ? mouth : TEACHER_PHOTO;
   const state = speaking ? 'speaking' : listening ? 'listening' : 'idle';
   return (
     <div className={`photo-teacher ${state}`}>
