@@ -21,15 +21,12 @@ function vowelFrames(word) {
 export default function PhotoTeacher({ speaking = false, listening = false, wordIndex = -1, word = '', isQuestion = false }) {
   const [mouth, setMouth] = useState(null);
   const [blinking, setBlinking] = useState(false);
-  const lastBoundaryRef = useRef(0);
   const boundariesSeenRef = useRef(false);
-  const speakingStartRef = useRef(0);
   const seqRef = useRef(null);
   const closeRef = useRef(null);
 
   useEffect(() => {
     if (!speaking || wordIndex < 0) return;
-    lastBoundaryRef.current = Date.now();
     boundariesSeenRef.current = true;
     if (seqRef.current) clearInterval(seqRef.current);
     if (closeRef.current) clearTimeout(closeRef.current);
@@ -64,14 +61,13 @@ export default function PhotoTeacher({ speaking = false, listening = false, word
       boundariesSeenRef.current = false;
       return;
     }
-    speakingStartRef.current = Date.now();
     boundariesSeenRef.current = false;
+    setMouth(TEACHER_MOUTH_OPEN);
     const id = setInterval(() => {
-      if (!boundariesSeenRef.current && Date.now() - speakingStartRef.current > 1200) {
-        setMouth(FRAMES[Math.floor(Math.random() * FRAMES.length)]);
-        setTimeout(() => setMouth(null), 220);
+      if (!boundariesSeenRef.current) {
+        setMouth((prev) => (prev ? null : FRAMES[Math.floor(Math.random() * FRAMES.length)]));
       }
-    }, 380);
+    }, 240);
     return () => clearInterval(id);
   }, [speaking]);
 
