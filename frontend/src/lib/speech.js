@@ -16,6 +16,10 @@ export function pickVoice(lang) {
   const voices = window.speechSynthesis.getVoices();
   if (!voices.length) return null;
   if (lang !== 'hi') {
+    const male = voices.find((x) => x.lang && x.lang.startsWith('en') && /male/i.test(x.name));
+    if (male) return male;
+    const named = voices.find((x) => x.lang && x.lang.startsWith('en') && /david|mark|daniel|alex|fred|james|george/i.test(x.name));
+    if (named) return named;
     const google = voices.find((x) => x.lang === 'en-US' && x.name.toLowerCase().includes('google'));
     if (google) return google;
   }
@@ -41,6 +45,7 @@ export function speak(text, lang, onBoundary, onEnd) {
   const voice = pickVoice(lang);
   if (voice) u.voice = voice;
   u.rate = 0.95;
+  u.pitch = 0.8;
   u.onboundary = (e) => { if (e.name === 'word' && onBoundary) onBoundary(e.charIndex || 0); };
   u.onend = () => onEnd && onEnd();
   u.onerror = () => onEnd && onEnd();
