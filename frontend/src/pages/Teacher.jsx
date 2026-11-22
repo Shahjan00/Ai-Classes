@@ -1,19 +1,10 @@
-// AI Teacher — the core page. One classroom window: the 3D teacher and
-// the green board share the same scene. She stands left of centre in
-// front of the board; when a question needs a diagram she steps aside
-// and points at it while she explains. There is no teacher switcher and
-// no mouse control: she is the only teacher, and the camera never moves.
-// START / STOP for continuous talking, an ask box below, and the full
-// chat experience (controls, bubbles, chips, Save chat) lives in the
-// Open convo floating window, so the teacher page stays clean.
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ConvoWidget from '../components/ConvoWidget';
-import ClassroomScene from '../components/ClassroomScene';
+import PhotoTeacher from '../components/PhotoTeacher';
 import FaceIdPanel from '../components/FaceIdPanel';
-import { matchBoardTopic, genericBoardSpec } from '../lib/boardTopics';
 import { stripMarkdown } from '../lib/md';
-import { streamChat, fetchBoardSpec } from '../lib/api';
+import { streamChat } from '../lib/api';
 import {
   speak, stopSpeaking, listenOnce, startContinuousListening,
   speechSupported, recognitionSupported,
@@ -60,13 +51,6 @@ export default function Teacher() {
   const [caption, setCaption] = useState('');
   const [listening, setListening] = useState(false);
   const [continuous, setContinuous] = useState(false);
-  const [layout, setLayout] = useState('center');
-  const [boardTopic, setBoardTopic] = useState(null);
-  // Word index the teacher is speaking right now, for her lip sync.
-  // Driven by real speechSynthesis boundary events; the viewer falls back
-  // to estimated timing when those events never fire.
-  const [spokenWordIndex, setSpokenWordIndex] = useState(-1);
-  const latestQRef = useRef('');
   const abortRef = useRef(null);
 
   // Refs so timers and speech callbacks always see fresh values.
@@ -74,7 +58,6 @@ export default function Teacher() {
   const busyRef = useRef(false);
   const langRef = useRef(lang);
   const continuousRef = useRef(false);
-  const boardTopicRef = useRef(null);
   const captionRef = useRef('');
   const listenStopRef = useRef(null);
 
@@ -82,7 +65,6 @@ export default function Teacher() {
   useEffect(() => { busyRef.current = busy; }, [busy]);
   useEffect(() => { langRef.current = lang; }, [lang]);
   useEffect(() => { continuousRef.current = continuous; }, [continuous]);
-  useEffect(() => { boardTopicRef.current = boardTopic; }, [boardTopic]);
   useEffect(() => { captionRef.current = caption; }, [caption]);
 
   const setAvatarState = (v) => {
@@ -138,11 +120,8 @@ export default function Teacher() {
     stopSpeaking();
     setAvatarState('idle');
     setCaption('');
-    setSpokenWordIndex(-1);
   };
 
-  // Speak an answer aloud. The board is a diagram only, so there is no
-  // line to follow along with.
   const speakAnswer = (text) => {
     const plain = stripMarkdown(text);
     if (!speakOn || !speechSupported() || !plain) {
@@ -157,22 +136,11 @@ export default function Teacher() {
     const finish = () => {
       if (ended) return;
       ended = true;
-      setSpokenWordIndex(-1);
       setAvatarState('happy');
       setTimeout(() => setAvatarState((a) => (a === 'happy' ? 'idle' : a)), 4000);
       if (continuousRef.current) setTimeout(() => { if (continuousRef.current) startListeningLoop(); }, 500);
     };
-    speak(
-      plain,
-      lang,
-      (charIndex) => {
-        // speechSynthesis gives a character offset; the teacher's mouth
-        // needs a word index, so count the words before that offset.
-        const idx = plain.slice(0, charIndex).split(/\s+/).filter(Boolean).length;
-        setSpokenWordIndex(idx);
-      },
-      finish,
-    );
+    speak(plain, lang, null, finish);
     // Safety net: headless browsers or missing voices may never fire onend.
     const words = plain.split(/\s+/).length;
     setTimeout(finish, Math.max(8000, words * 500 + 4000));
@@ -184,27 +152,6 @@ export default function Teacher() {
     stopSpeaking();
     stopListeningLoop();
     setCaption('');
-    // Board or center? Ask the backend for a realtime board spec for ANY
-    // question, in parallel with the answer. A null spec means no visual
-    // helps, so the teacher stays centered. If the backend cannot be
-    // reached, fall back to the fixed topics. The layout resets to center
-    // first so a stale board never lingers into the next question.
-    latestQRef.current = q;
-    setBoardTopic(null);
-    setLayout('center');
-    fetchBoardSpec(q, subject, cls, lang).then(({ spec, error }) => {
-      if (latestQRef.current !== q) return;
-      if (spec) {
-        setBoardTopic(spec);
-        setLayout('board');
-      } else if (error) {
-        const topic = matchBoardTopic(q);
-        if (topic) {
-          setBoardTopic(topic);
-          setLayout('board');
-        }
-      }
-    });
     const history = [...msgs.filter((m) => m.role !== 'ai' || m.text !== WELCOME.text), { role: 'user', text: q }];
     setMsgs([...history, { role: 'ai', text: '' }]);
     setInput('');
@@ -224,18 +171,6 @@ export default function Teacher() {
       () => {
         setBusy(false);
         if (full.trim()) {
-          // No board yet (the backend had nothing and no canned topic
-          // matched)? Build a fresh one from the answer itself, so the
-          // board always generates for the question instead of showing
-          // an old example. A real backend spec arriving late still
-          // replaces this one.
-          if (!boardTopicRef.current) {
-            const spec = genericBoardSpec(latestQRef.current, full);
-            if (spec) {
-              setBoardTopic(spec);
-              setLayout('board');
-            }
-          }
           speakAnswer(full);
         } else {
           setAvatarState('idle');
@@ -270,8 +205,6 @@ export default function Teacher() {
     stopSpeaking();
     setMsgs([WELCOME]);
     setCaption('');
-    setBoardTopic(null);
-    setLayout('center');
   };
 
   // Face ID recognised the student: greet them by name, out loud and
@@ -282,8 +215,6 @@ export default function Teacher() {
     speakAnswer(greeting);
   };
 
-  const boardMode = layout === 'board' && boardTopic;
-
   return (
     <section className="teacher-stage">
       <div className="wrap">
@@ -291,15 +222,9 @@ export default function Teacher() {
         <h1 className="display display-md teacher-title">Ask. Listen. Learn.</h1>
         <p className="teacher-tagline">Ask anything, learn anything.</p>
 
-        <div className={`teacher-area ${boardMode ? 'board-mode' : ''}`}>
-          <div className="classroom-wrap">
-            <ClassroomScene
-              speaking={avatar === 'speaking'}
-              listening={listening}
-              spokenText={caption}
-              wordIndex={spokenWordIndex}
-              boardTopic={boardTopic}
-            />
+        <div className="teacher-area">
+          <div className="photo-teacher-wrap">
+            <PhotoTeacher speaking={avatar === 'speaking'} listening={listening} />
             <p className="stage-status">{STATUS[avatar] || STATUS.idle}</p>
           </div>
         </div>
