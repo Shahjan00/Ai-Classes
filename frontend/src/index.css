@@ -481,6 +481,7 @@ label { font-weight: 600; font-size: 13px; }
 .photo-teacher img { display: block; width: min(420px, 90vw); height: auto; max-height: 560px; object-fit: cover; border-radius: 24px; border: 1.5px solid var(--line); box-shadow: 0 18px 44px rgba(17, 17, 16, 0.12); }
 .photo-teacher.idle img { animation: photo-breathe 5s ease-in-out infinite; }
 .photo-teacher.speaking img { animation: photo-nod 2.4s ease-in-out infinite; }
+.photo-teacher.paused img { animation-play-state: paused; }
 .photo-teacher.question { transform: rotate(1.5deg); transition: transform 0.4s ease; }
 .photo-teacher.listening img { animation: photo-breathe 5s ease-in-out infinite; }
 @keyframes photo-breathe { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-4px) scale(1.005); } }

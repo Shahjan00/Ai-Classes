@@ -2,8 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { TEACHER_PHOTO } from '../lib/teacherPhoto';
 import { TEACHER_MOUTH_OPEN, TEACHER_MOUTH_SLIGHT, TEACHER_MOUTH_WIDE, TEACHER_MOUTH_O, TEACHER_BLINK } from '../lib/teacherFrames';
 
-const FRAMES = [TEACHER_MOUTH_SLIGHT, TEACHER_MOUTH_OPEN, TEACHER_MOUTH_WIDE, TEACHER_MOUTH_O];
-
 function mouthForVowel(v) {
   if (v === 'o' || v === 'u') return TEACHER_MOUTH_O;
   if (v === 'a') return TEACHER_MOUTH_WIDE;
@@ -21,22 +19,24 @@ function vowelFrames(word) {
 export default function PhotoTeacher({ speaking = false, listening = false, wordIndex = -1, word = '', isQuestion = false }) {
   const [mouth, setMouth] = useState(null);
   const [blinking, setBlinking] = useState(false);
-  const boundariesSeenRef = useRef(false);
+  const [paused, setPaused] = useState(false);
+  const lastWordRef = useRef(0);
   const seqRef = useRef(null);
   const closeRef = useRef(null);
 
   useEffect(() => {
     if (!speaking || wordIndex < 0) return;
-    boundariesSeenRef.current = true;
+    lastWordRef.current = Date.now();
+    setPaused(false);
     if (seqRef.current) clearInterval(seqRef.current);
     if (closeRef.current) clearTimeout(closeRef.current);
     const frames = vowelFrames(word);
-    const hold = Math.min(450, 150 + (word || '').length * 25);
+    const hold = Math.min(600, 200 + (word || '').length * 35);
     setMouth(frames[0]);
     if (frames.length === 1) {
       closeRef.current = setTimeout(() => setMouth(null), hold);
     } else {
-      const stepMs = Math.max(90, Math.floor(hold / frames.length));
+      const stepMs = Math.max(140, Math.floor(hold / frames.length));
       let i = 1;
       seqRef.current = setInterval(() => {
         if (i >= frames.length) {
@@ -58,16 +58,17 @@ export default function PhotoTeacher({ speaking = false, listening = false, word
   useEffect(() => {
     if (!speaking) {
       setMouth(null);
-      boundariesSeenRef.current = false;
+      setPaused(false);
       return;
     }
-    boundariesSeenRef.current = false;
+    lastWordRef.current = Date.now();
     setMouth(TEACHER_MOUTH_OPEN);
     const id = setInterval(() => {
-      if (!boundariesSeenRef.current) {
-        setMouth((prev) => (prev ? null : FRAMES[Math.floor(Math.random() * FRAMES.length)]));
+      if (Date.now() - lastWordRef.current > 800) {
+        setPaused(true);
+        setMouth(null);
       }
-    }, 240);
+    }, 200);
     return () => clearInterval(id);
   }, [speaking]);
 
@@ -89,7 +90,7 @@ export default function PhotoTeacher({ speaking = false, listening = false, word
 
   const frame = blinking ? TEACHER_BLINK : mouth && speaking ? mouth : TEACHER_PHOTO;
   const state = speaking ? 'speaking' : listening ? 'listening' : 'idle';
-  const cls = `photo-teacher ${state}${isQuestion && speaking ? ' question' : ''}`;
+  const cls = `photo-teacher ${state}${paused && speaking ? ' paused' : ''}${isQuestion && speaking ? ' question' : ''}`;
   return (
     <div className={cls}>
       <img src={frame} alt="Your AI teacher" draggable={false} />

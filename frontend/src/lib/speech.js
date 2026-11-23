@@ -35,25 +35,71 @@ export function pickVoice(lang) {
   return voices[0];
 }
 
+let guessTimer = null;
+
+function clearGuess() {
+  if (guessTimer) {
+    clearTimeout(guessTimer);
+    guessTimer = null;
+  }
+}
+
+function wordStarts(text) {
+  const list = [];
+  const re = /\S+/g;
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    list.push({ at: m.index, word: m[0] });
+  }
+  return list;
+}
+
+function gapAfter(word) {
+  if (/[.!?]$/.test(word)) return 550;
+  if (/[,;:]$/.test(word)) return 220;
+  return 60;
+}
+
+function wordTime(word) {
+  return Math.min(650, 170 + word.length * 45);
+}
+
 // Speak text. onBoundary(charIndex) fires per word, onEnd when done.
 // Returns a stop() function.
 export function speak(text, lang, onBoundary, onEnd) {
   if (!speechSupported()) { onEnd && onEnd(); return () => {}; }
   window.speechSynthesis.cancel();
+  clearGuess();
   const u = new SpeechSynthesisUtterance(text);
   u.lang = lang === 'hi' ? 'hi-IN' : 'en-IN';
   const voice = pickVoice(lang);
   if (voice) u.voice = voice;
   u.rate = 0.95;
   u.pitch = 0.8;
-  u.onboundary = (e) => { if (e.name === 'word' && onBoundary) onBoundary(e.charIndex || 0); };
-  u.onend = () => onEnd && onEnd();
-  u.onerror = () => onEnd && onEnd();
+  const words = wordStarts(text);
+  let realSeen = false;
+  let done = false;
+  const runWord = (i) => {
+    if (done || realSeen || i >= words.length) return;
+    if (onBoundary) onBoundary(words[i].at);
+    const wait = wordTime(words[i].word) + gapAfter(words[i].word);
+    guessTimer = setTimeout(() => runWord(i + 1), wait);
+  };
+  u.onboundary = (e) => {
+    if (e.name !== 'word') return;
+    realSeen = true;
+    clearGuess();
+    if (onBoundary) onBoundary(e.charIndex || 0);
+  };
+  u.onend = () => { done = true; clearGuess(); onEnd && onEnd(); };
+  u.onerror = () => { done = true; clearGuess(); onEnd && onEnd(); };
   window.speechSynthesis.speak(u);
-  return () => window.speechSynthesis.cancel();
+  guessTimer = setTimeout(() => runWord(0), 120);
+  return () => { done = true; clearGuess(); window.speechSynthesis.cancel(); };
 }
 
 export function stopSpeaking() {
+  clearGuess();
   if (speechSupported()) window.speechSynthesis.cancel();
 }
 
