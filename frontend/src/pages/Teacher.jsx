@@ -5,7 +5,7 @@ import PhotoTeacher from '../components/PhotoTeacher';
 import FaceIdPanel from '../components/FaceIdPanel';
 import { stripMarkdown } from '../lib/md';
 import { streamChat, askVision } from '../lib/api';
-import { captureFrame, getActiveVideo } from '../lib/faceId';
+import { captureFrame, getActiveVideo, startCamera } from '../lib/faceId';
 import {
   speak, stopSpeaking, listenOnce, startContinuousListening,
   speechSupported, recognitionSupported,
@@ -26,10 +26,12 @@ const WELCOME = {
   text: 'Hi! I am JARVISH, your AI teacher. Ask me anything, a school question, general knowledge, coding or writing, and I will give you a clear answer. Just speak, or type below.',
 };
 
+const GREETING = 'Hi! I am an AI teacher. I can answer your questions and clear your doubts. I can give answers from class 1 to 12. How can I help you?';
+
 function isVisualQuestion(q) {
   const text = (q || '').toLowerCase();
-  if (/(shirt|colour|color|wearing|outfit|glasses|webcam|camera|background)/.test(text)) return true;
-  if (/(what am i|am i wearing|do i look|can you see|what do you see|look at me|see me|behind me|my face|my hair|what colour|what color)/.test(text)) return true;
+  if (/(shirt|tshirt|t-shirt|colour|color|wearing|outfit|glasses|webcam|camera|background|scene)/.test(text)) return true;
+  if (/(what am i|am i wearing|do i look|can you see|what do you see|look at me|see me|behind me|my face|my hair|what colour|what color|describe what you see|describe the scene|describe me|describe my|in front of|around me|what are you seeing|can you look)/.test(text)) return true;
   return false;
 }
 
@@ -71,6 +73,7 @@ export default function Teacher() {
   const continuousRef = useRef(false);
   const captionRef = useRef('');
   const listenStopRef = useRef(null);
+  const teacherVideoRef = useRef(null);
   const lastGreetRef = useRef({ name: null, at: 0 });
   const knownNameRef = useRef(null);
 
@@ -119,11 +122,24 @@ export default function Teacher() {
     );
   };
 
+  const openTeacherCamera = async () => {
+    const videoEl = teacherVideoRef.current;
+    if (!videoEl) return false;
+    try {
+      await startCamera(videoEl);
+      await new Promise((r) => setTimeout(r, 900));
+      const active = getActiveVideo();
+      return !!(active && active.videoWidth);
+    } catch {
+      return false;
+    }
+  };
+
   const startTalking = () => {
     continuousRef.current = true;
     setContinuous(true);
-    toast('Talking mode on — just speak, I am listening.');
-    startListeningLoop();
+    setMsgs((prev) => [...prev, { role: 'ai', text: GREETING }]);
+    speakAnswer(GREETING);
   };
 
   const stopTalking = () => {
@@ -178,20 +194,27 @@ export default function Teacher() {
     setTimeout(finish, Math.max(8000, words * 500 + 4000));
   };
 
-  const send = (text) => {
+  const send = async (text) => {
     const q = (text || input).trim();
     if (!q || busy) return;
     stopSpeaking();
     stopListeningLoop();
     setCaption('');
     if (isVisualQuestion(q)) {
-      const videoEl = getActiveVideo();
+      let videoEl = getActiveVideo();
       if (!videoEl || !videoEl.videoWidth) {
-        const note = 'Turn on the class camera first, then ask me. I need to see you to answer that.';
-        setMsgs((prev) => [...prev, { role: 'user', text: q }, { role: 'ai', text: note }]);
-        setInput('');
-        speakAnswer(note);
-        return;
+        setBusy(true);
+        setAvatarState('thinking');
+        const opened = await openTeacherCamera();
+        videoEl = getActiveVideo();
+        if (!opened || !videoEl || !videoEl.videoWidth) {
+          setBusy(false);
+          const note = 'Turn on the class camera first, then ask me. I need to see you to answer that.';
+          setMsgs((prev) => [...prev, { role: 'user', text: q }, { role: 'ai', text: note }]);
+          setInput('');
+          speakAnswer(note);
+          return;
+        }
       }
       const frame = captureFrame();
       if (!frame) {
@@ -309,6 +332,7 @@ export default function Teacher() {
             <PhotoTeacher speaking={avatar === 'speaking'} listening={listening} wordIndex={spokenWordIndex} word={spokenWord} isQuestion={isQuestion} />
             <p className="stage-status">{STATUS[avatar] || STATUS.idle}</p>
           </div>
+          <video ref={teacherVideoRef} muted playsInline aria-hidden="true" style={{ width: 1, height: 1, opacity: 0, position: 'absolute', pointerEvents: 'none' }} />
         </div>
 
         {/* Short spoken answer, plain text only — no card, no overlay. */}
