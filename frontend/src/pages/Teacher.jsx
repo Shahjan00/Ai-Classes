@@ -31,7 +31,7 @@ const GREETING = 'Hi! I am an AI teacher. I can answer your questions and clear 
 function isVisualQuestion(q) {
   const text = (q || '').toLowerCase();
   if (/(shirt|tshirt|t-shirt|colour|color|wearing|outfit|glasses|webcam|camera|background|scene)/.test(text)) return true;
-  if (/(what am i|am i wearing|do i look|can you see|what do you see|look at me|see me|behind me|my face|my hair|what colour|what color|describe what you see|describe the scene|describe me|describe my|in front of|around me|what are you seeing|can you look)/.test(text)) return true;
+  if (/(what am i|am i wearing|do i look|can you see|what do you see|what you see|you are seeing|seeing right now|look at me|see me|behind me|my face|my hair|what colour|what color|describe what you see|describe the scene|describe me|describe my|in front of|around me|what are you seeing|can you look)/.test(text)) return true;
   return false;
 }
 
@@ -72,6 +72,7 @@ export default function Teacher() {
   const langRef = useRef(lang);
   const continuousRef = useRef(false);
   const captionRef = useRef('');
+  const msgsRef = useRef(msgs);
   const listenStopRef = useRef(null);
   const teacherVideoRef = useRef(null);
   const lastGreetRef = useRef({ name: null, at: 0 });
@@ -82,6 +83,7 @@ export default function Teacher() {
   useEffect(() => { langRef.current = lang; }, [lang]);
   useEffect(() => { continuousRef.current = continuous; }, [continuous]);
   useEffect(() => { captionRef.current = caption; }, [caption]);
+  useEffect(() => { msgsRef.current = msgs; }, [msgs]);
 
   const setAvatarState = (v) => {
     const next = typeof v === 'function' ? v(avatarRef.current) : v;
@@ -224,7 +226,7 @@ export default function Teacher() {
         speakAnswer(note);
         return;
       }
-      const vhistory = [...msgs.filter((m) => m.role !== 'ai' || m.text !== WELCOME.text), { role: 'user', text: q }];
+      const vhistory = [...msgsRef.current.filter((m) => m.role !== 'ai' || m.text !== WELCOME.text), { role: 'user', text: q }];
       setMsgs([...vhistory, { role: 'ai', text: '' }]);
       setInput('');
       setBusy(true);
@@ -248,7 +250,7 @@ export default function Teacher() {
         });
       return;
     }
-    const history = [...msgs.filter((m) => m.role !== 'ai' || m.text !== WELCOME.text), { role: 'user', text: q }];
+    const history = [...msgsRef.current.filter((m) => m.role !== 'ai' || m.text !== WELCOME.text), { role: 'user', text: q }];
     setMsgs([...history, { role: 'ai', text: '' }]);
     setInput('');
     setBusy(true);
