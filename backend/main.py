@@ -20,8 +20,7 @@ from pydantic import BaseModel, Field
 
 MODEL = "openai/gpt-oss-20b"
 VISION_MODELS = [
-    "meta-llama/llama-4-scout-17b-16e-instruct",
-    "meta-llama/llama-4-maverick-17b-128e-instruct",
+    "qwen/qwen3.8-27b",
 ]
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
